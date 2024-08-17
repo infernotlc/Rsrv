@@ -17,22 +17,45 @@ class AuthRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
 ) : AuthRepository {
 
-    override suspend fun signInWithEmailAndPassword(email: String, password: String): Flow<RootResult<FirebaseUser>> = flow {
+    override suspend fun signInWithEmailAndPassword(
+        email: String,
+        password: String
+    ): Flow<RootResult<FirebaseUser>> = flow {
         emit(RootResult.Loading)
         try {
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
-            emit(RootResult.Success(result.user))
+            val user = result.user
+            val role = user?.let { getUserRole(it.uid) }
+            if (role == "admin") {
+                emit(RootResult.Success(result.user))
+            } else {
+                RootResult.Success("customer")
+            }
         } catch (e: Exception) {
             emit(RootResult.Error(e.message ?: "Something went wrong"))
         }
     }.flowOn(Dispatchers.IO)
 
-    override suspend fun signUpWithEmailAndPassword(email: String, password: String): Flow<RootResult<FirebaseUser>> = flow {
+    private suspend fun getUserRole(uid: String): String {
+        val documentSnapshot = firestore.collection("users").document(uid).get().await()
+        return documentSnapshot.getString("role") ?: "customer"
+    }
+
+    override suspend fun signUpWithEmailAndPassword(
+        email: String,
+        password: String
+    ): Flow<RootResult<FirebaseUser>> = flow {
         emit(RootResult.Loading)
         try {
             val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
             val user = result.user
-
+            val userMap = mapOf(
+                "email" to (user?.email),
+                "role" to "customer" //assigned as default
+            )
+            if (user != null) {
+                firestore.collection("users").document(user.uid).set(userMap).await()
+            }
             emit(RootResult.Success(user))
         } catch (e: Exception) {
             emit(RootResult.Error(e.message ?: "Something went wrong"))
