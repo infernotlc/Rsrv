@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1042990969065",
+    "project_id": "rsrv-87775",
+    "storage_bucket": "rsrv-87775.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1042990969065:android:80a08173a3e3484d258078",
+        "android_client_info": {
+          "package_name": "com.tlc.rsrv"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVg1doG8WM51mQPpAptws9Era8KFbgXeU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
