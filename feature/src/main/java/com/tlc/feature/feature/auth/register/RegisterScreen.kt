@@ -31,6 +31,7 @@ import com.tlc.feature.feature.component.TextFieldComponent
 import com.tlc.feature.feature.component.auth_components.AuthButtonComponent
 import com.tlc.feature.feature.component.auth_components.ClickableLoginTextComponent
 import com.tlc.feature.feature.component.auth_components.PasswordFieldComponent
+import com.tlc.feature.navigation.NavigationGraph
 
 @Composable
 fun RegisterScreen(
