@@ -27,6 +27,7 @@ import com.tlc.feature.feature.auth.forget_password.viewmodel.ForgetPasswordView
 import com.tlc.feature.feature.component.LoadingLottie
 import com.tlc.feature.feature.component.TextFieldComponent
 import com.tlc.feature.feature.component.auth_components.AuthButtonComponent
+import com.tlc.feature.navigation.NavigationGraph
 
 @Composable
 fun ForgotPasswordScreen(
