@@ -6,5 +6,5 @@ data class LoginUiState(
     val isLoading: Boolean = false,
     val user: FirebaseUser? = null,
     val error: String? = null,
-    val isLoggedInAnonymously: Boolean = false
+    val role: String? = null
 )
