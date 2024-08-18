@@ -40,8 +40,8 @@ fun PasswordFieldComponent(stateValue:String,label: String,onValueChange: (Strin
             unfocusedBorderColor = Color.Gray,
             focusedLabelColor = Color.Gray,
             unfocusedLabelColor = Color.LightGray,
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White
+            focusedContainerColor = Color.Black,
+            unfocusedContainerColor = Color.Black
         ),
         onValueChange = {
             password.value = it
