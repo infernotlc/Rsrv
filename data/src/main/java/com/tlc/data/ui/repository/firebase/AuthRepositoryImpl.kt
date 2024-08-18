@@ -1,5 +1,6 @@
 package com.tlc.data.ui.repository.firebase
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -26,19 +27,26 @@ class AuthRepositoryImpl @Inject constructor(
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
             val user = result.user
             val role = user?.let { getUserRole(it.uid) }
-            if (role == "admin") {
-                emit(RootResult.Success(result.user))
+            Log.d("AuthRepository", "User: $user, Role: $role")
+            if (role == "admin" || role == "customer") {
+                emit(RootResult.Success(user))
             } else {
-                RootResult.Success("customer")
+                emit(RootResult.Error("Unknown role"))
             }
         } catch (e: Exception) {
             emit(RootResult.Error(e.message ?: "Something went wrong"))
         }
     }.flowOn(Dispatchers.IO)
 
-    private suspend fun getUserRole(uid: String): String {
-        val documentSnapshot = firestore.collection("users").document(uid).get().await()
-        return documentSnapshot.getString("role") ?: "customer"
+
+    suspend fun getUserRole(uid: String): String? {
+        return try {
+            val document = firestore.collection("users").document(uid).get().await()
+            document.getString("role")
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Error getting user role: ${e.message}")
+            null
+        }
     }
 
     override suspend fun signUpWithEmailAndPassword(
@@ -51,7 +59,7 @@ class AuthRepositoryImpl @Inject constructor(
             val user = result.user
             val userMap = mapOf(
                 "email" to (user?.email),
-                "role" to "customer" //assigned as default
+                "role" to "customer"
             )
             if (user != null) {
                 firestore.collection("users").document(user.uid).set(userMap).await()
@@ -82,7 +90,7 @@ class AuthRepositoryImpl @Inject constructor(
                 emit(RootResult.Success(false))
             }
         } catch (e: Exception) {
-            emit(RootResult.Error(e.message ?: "Something went wrong"))
+        //    emit(RootResult.Error(e.message ?: "Something went wrong"))
         }
     }
 
@@ -95,4 +103,32 @@ class AuthRepositoryImpl @Inject constructor(
             emit(RootResult.Error(e.message ?: "Something went wrong"))
         }
     }
+
+    override suspend fun deleteCurrentUser(): Flow<RootResult<Boolean>> = flow {
+        emit(RootResult.Loading)
+        try {
+            val currentUser = firebaseAuth.currentUser
+            val userId = currentUser?.uid
+            if (userId != null) {
+
+                val userDocRef = firestore.collection("users").document(userId)
+
+                val playerCollection = userDocRef.collection("players").get().await()
+                playerCollection.documents.forEach { it.reference.delete().await() }
+
+                val competitionCollection = userDocRef.collection("competitions").get().await()
+                competitionCollection.documents.forEach { it.reference.delete().await() }
+
+                userDocRef.delete().await()
+
+                currentUser.delete().await()
+
+                emit(RootResult.Success(true))
+            } else {
+                emit(RootResult.Error("User ID is null"))
+            }
+        } catch (e: Exception) {
+            emit(RootResult.Error(e.message ?: "Something went wrong"))
+        }
+    }.flowOn(Dispatchers.IO)
 }
