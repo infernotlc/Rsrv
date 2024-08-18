@@ -120,7 +120,7 @@ fun LoginScreen(
                             },
                             painterResource(id = R.drawable.ic_lock)
                         )
-                        UnderLinedTextComponent(value = "Forgot your password?", onClick = {
+                        UnderLinedTextComponent(value = "Forgot your password :(", onClick = {
                             navController.navigate(NavigationGraph.FORGOT_PASSWORD.route)
                         })
                         Spacer(modifier = Modifier.height(10.dp))
