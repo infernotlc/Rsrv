@@ -43,8 +43,8 @@ fun TextFieldComponent(
             unfocusedLabelColor = unfocusedLabelColor,
             focusedBorderColor = focusedBorderColor,
             unfocusedBorderColor = unfocusedBorderColor,
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White
+            focusedContainerColor = Color.Black,
+            unfocusedContainerColor = Color.Black
         ),
         onValueChange = {
             textValue = it
