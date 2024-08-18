@@ -28,8 +28,8 @@ fun AuthButtonComponent(
     modifier: Modifier = Modifier,
     fillMaxWidth: Boolean = true,
     heightIn: Dp = 48.dp,
-    firstColor: Color = Color.Black,
-    secondColor: Color = Color.White,
+    firstColor: Color = Color.Red,
+    secondColor: Color = Color.Black,
 ) {
     Button(
         onClick = { onClick() },
