@@ -23,10 +23,10 @@ fun UnderLinedTextComponent(value: String, onClick: () -> Unit) {
             text = value,
             style = TextStyle(
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Normal,
-                fontStyle = FontStyle.Normal
+                fontWeight = FontWeight.Bold,
+                fontStyle = FontStyle.Italic
             ),
-            color = Color.Gray,
+            color = Color.White,
             textAlign = TextAlign.Center,
             textDecoration = TextDecoration.Underline
         )
