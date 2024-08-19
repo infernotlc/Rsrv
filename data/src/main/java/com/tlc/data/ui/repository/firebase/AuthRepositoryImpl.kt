@@ -1,5 +1,6 @@
 package com.tlc.data.ui.repository.firebase
 
+import android.content.ContentValues.TAG
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -90,7 +91,9 @@ class AuthRepositoryImpl @Inject constructor(
                 emit(RootResult.Success(false))
             }
         } catch (e: Exception) {
-        //    emit(RootResult.Error(e.message ?: "Something went wrong"))
+            val errorMessage = e.message ?: "An unexpected error occurred while checking login status."
+            Log.e(TAG, "isLoggedIn: error: $errorMessage")
+            emit(RootResult.Error(errorMessage))
         }
     }
 
