@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.toColorInt
 
 @Composable
 fun ClickableLoginTextComponent(tryToLogin: Boolean = true, onTextSelected: (String) -> Unit) {
@@ -25,7 +26,7 @@ fun ClickableLoginTextComponent(tryToLogin: Boolean = true, onTextSelected: (Str
     val annotatedString = buildAnnotatedString {
         append(initialText)
         pushStringAnnotation(tag = "ACTION", annotation = loginText)
-        withStyle(style = SpanStyle(color = Color.Gray, fontWeight = FontWeight.Bold)) {
+        withStyle(style = SpanStyle(color = Color.White, fontWeight = FontWeight.Bold)) {
             append(loginText)
         }
     }
@@ -39,8 +40,9 @@ fun ClickableLoginTextComponent(tryToLogin: Boolean = true, onTextSelected: (Str
             fontWeight = FontWeight.Normal,
             fontStyle = FontStyle.Normal,
             textAlign = TextAlign.Center,
+            color = Color.White
 
-            ),
+        ),
         text = annotatedString,
         onClick = { offset ->
             annotatedString.getStringAnnotations(tag = "ACTION", start = offset, end = offset)
