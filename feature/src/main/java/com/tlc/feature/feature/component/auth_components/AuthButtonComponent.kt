@@ -58,6 +58,7 @@ fun AuthButtonComponent(
                 text = value,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.SansSerif,
             )
         }
     }
