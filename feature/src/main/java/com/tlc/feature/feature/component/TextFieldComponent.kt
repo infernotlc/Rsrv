@@ -25,10 +25,10 @@ fun TextFieldComponent(
     label: String,
     onValueChange: (String) -> Unit,
     painterResource: Painter,
-    focusedLabelColor: Color = Color.Gray,
-    unfocusedLabelColor: Color = Color.LightGray,
-    focusedBorderColor: Color = Color.Gray,
-    unfocusedBorderColor: Color = Color.LightGray
+    focusedLabelColor: Color = Color.White,
+    unfocusedLabelColor: Color = Color.White,
+    focusedBorderColor: Color = Color.White,
+    unfocusedBorderColor: Color = Color.White
 ) {
     var textValue by remember { mutableStateOf(stateValue) }
 
@@ -39,13 +39,17 @@ fun TextFieldComponent(
         label = { Text(text = label) },
         value = textValue,
         colors = OutlinedTextFieldDefaults.colors(
+            unfocusedTextColor = Color.White,
+            focusedTextColor = Color.White,
             focusedLabelColor = focusedLabelColor,
             unfocusedLabelColor = unfocusedLabelColor,
             focusedBorderColor = focusedBorderColor,
             unfocusedBorderColor = unfocusedBorderColor,
             focusedContainerColor = Color.Black,
-            unfocusedContainerColor = Color.Black
-        ),
+            unfocusedContainerColor = Color.Black,
+
+
+            ),
         onValueChange = {
             textValue = it
             onValueChange(it)
