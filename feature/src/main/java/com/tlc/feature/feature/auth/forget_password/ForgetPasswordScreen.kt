@@ -1,6 +1,8 @@
 package com.tlc.feature.feature.auth.forget_password
 
+import android.annotation.SuppressLint
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -29,6 +32,7 @@ import com.tlc.feature.feature.component.TextFieldComponent
 import com.tlc.feature.feature.component.auth_components.AuthButtonComponent
 import com.tlc.feature.navigation.NavigationGraph
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ForgotPasswordScreen(
     navController: NavHostController,
@@ -72,7 +76,7 @@ fun ForgotPasswordScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(it),
+                    .background(Color.Black),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
