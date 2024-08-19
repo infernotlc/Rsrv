@@ -24,7 +24,12 @@ import com.tlc.feature.R
 
 
 @Composable
-fun PasswordFieldComponent(stateValue:String,label: String,onValueChange: (String) -> Unit , painterResource : Painter){
+fun PasswordFieldComponent(
+    stateValue: String,
+    label: String,
+    onValueChange: (String) -> Unit,
+    painterResource: Painter
+) {
 
     val password = remember { mutableStateOf("") }
     val passwordVisibility = remember { mutableStateOf(false) }
@@ -35,11 +40,13 @@ fun PasswordFieldComponent(stateValue:String,label: String,onValueChange: (Strin
             .clip(RoundedCornerShape(4.dp)),
         label = { Text(text = label) },
         value = password.value,
-        colors =  OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Color.LightGray,
-            unfocusedBorderColor = Color.Gray,
-            focusedLabelColor = Color.Gray,
-            unfocusedLabelColor = Color.LightGray,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White,
+            focusedBorderColor = Color.White,
+            unfocusedBorderColor = Color.White,
+            focusedLabelColor = Color.White,
+            unfocusedLabelColor = Color.White,
             focusedContainerColor = Color.Black,
             unfocusedContainerColor = Color.Black
         ),
@@ -52,13 +59,13 @@ fun PasswordFieldComponent(stateValue:String,label: String,onValueChange: (Strin
             Icon(painter = painterResource, contentDescription = "")
         },
         trailingIcon = {
-            val iconImage = if (passwordVisibility.value){
+            val iconImage = if (passwordVisibility.value) {
                 R.drawable.ic_hide_password
             } else {
                 R.drawable.ic_show_password
             }
 
-            val description = if(passwordVisibility.value){
+            val description = if (passwordVisibility.value) {
                 "Hide Password"
             } else {
                 "Show Password"
