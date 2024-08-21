@@ -27,15 +27,16 @@ class AuthRepositoryImpl @Inject constructor(
         try {
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
             val user = result.user
+            Log.d("AuthRepositoryImpl", "Signed in User: $user")
             val role = user?.let { getUserRole(it.uid) }
-            Log.d("AuthRepository", "User: $user, Role: $role")
+            Log.d("AuthRepositoryImpl", "User Role: $role")
             if (role == "admin" || role == "customer") {
                 emit(RootResult.Success(user))
             } else {
                 emit(RootResult.Error("Unknown role"))
             }
         } catch (e: Exception) {
-            Log.e("AuthRepository", "SignIn Error: ${e.message}")
+            Log.e("AuthRepositoryImpl", "SignIn Error: ${e.message}")
             emit(RootResult.Error(e.message ?: "Something went wrong"))
         }
     }.flowOn(Dispatchers.IO)
