@@ -95,7 +95,7 @@ class LoginViewModel @Inject constructor(
                     is RootResult.Success -> {
                         val user = FirebaseAuth.getInstance().currentUser
                         if (user != null) {
-                            val role = authRepository.getUserRole(user.uid) ?: "guest"
+                            val role = authRepository.getUserRole(user.uid)
                             _loggingState.value = _loggingState.value.copy(
                                 isLoading = false,
                                 transaction = true,
