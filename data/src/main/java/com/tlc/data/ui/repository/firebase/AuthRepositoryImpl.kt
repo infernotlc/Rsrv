@@ -35,6 +35,7 @@ class AuthRepositoryImpl @Inject constructor(
                 emit(RootResult.Error("Unknown role"))
             }
         } catch (e: Exception) {
+            Log.e("AuthRepository", "SignIn Error: ${e.message}")
             emit(RootResult.Error(e.message ?: "Something went wrong"))
         }
     }.flowOn(Dispatchers.IO)
