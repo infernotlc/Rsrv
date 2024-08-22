@@ -19,4 +19,5 @@ interface AuthRepository {
     fun isLoggedIn(): Flow<RootResult<Boolean>>
     fun sendPasswordResetEmail(email: String): Flow<RootResult<Boolean>>
     suspend fun deleteCurrentUser(): Flow<RootResult<Boolean>>
+    suspend fun getUserRole(uid: String): String?
 }
