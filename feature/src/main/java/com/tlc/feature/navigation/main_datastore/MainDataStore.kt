@@ -52,9 +52,9 @@ class MainDataStore @Inject constructor(
         preferences[PreferencesKeys.APP_ENTRY_KEY] ?: true
     }
 
-    suspend fun saveAppEntry() {
+    suspend fun saveAppEntry(loggedIn: Boolean) {
         myPreferencesDataStore.edit { preferences ->
-            preferences[PreferencesKeys.APP_ENTRY_KEY] = false
+            preferences[PreferencesKeys.APP_ENTRY_KEY] = loggedIn
         }
     }
 }
