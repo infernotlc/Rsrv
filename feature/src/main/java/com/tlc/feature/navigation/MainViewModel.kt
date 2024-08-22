@@ -35,9 +35,9 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun saveAppEntry() {
+    fun saveAppEntry(loggedIn:Boolean) {
         viewModelScope.launch {
-            myPreferencesDataStore.saveAppEntry()
+            myPreferencesDataStore.saveAppEntry(loggedIn)
         }
     }
 }
