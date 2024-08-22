@@ -42,7 +42,7 @@ class AuthRepositoryImpl @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
 
-    suspend fun getUserRole(uid: String): String? {
+    override suspend fun getUserRole(uid: String): String? {
         return try {
             val document = firestore.collection("users").document(uid).get().await()
             document.getString("role")
