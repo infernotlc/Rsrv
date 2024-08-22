@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,7 +59,7 @@ fun LoginScreen(
     }
 
     LaunchedEffect(uiState.user, uiState.role) {
-        mainViewModel.saveAppEntry()
+        mainViewModel.saveAppEntry(true)
         if (uiState.user != null && uiState.role != null) {
             when (uiState.role) {
                 "admin" -> {
@@ -84,59 +85,54 @@ fun LoginScreen(
         }
     }
 
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            LoadingLottie(resId = R.raw.loading_lottie)
+        }
+    } else {
+        Scaffold(modifier = Modifier.padding(18.dp).background(Color.Black) ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                LoadingLottie(resId = R.raw.loading_lottie, height = 275.dp)
 
-            if (uiState.isLoading) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    LoadingLottie(resId = R.raw.loading_lottie)
-                }
-            } else {
-                Scaffold(modifier = Modifier.padding(18.dp).background(Color.Black) ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        LoadingLottie(resId = R.raw.loading_lottie, height = 275.dp)
+                Spacer(modifier = Modifier.height(10.dp))
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                TextFieldComponent(
+                    email,
+                    onValueChange = { updatedEmail -> email = updatedEmail.trim() },
+                    label = "Email",
+                    painterResource = painterResource(id = R.drawable.mail_icon)
+                )
+                PasswordFieldComponent(
+                    password,
+                    label = "Password",
+                    onValueChange = { updatedPassword -> password = updatedPassword.trim() },
+                    painterResource(id = R.drawable.ic_lock)
+                )
+                UnderLinedTextComponent(value = "Forgot your password :(", onClick = {
+                    navController.navigate(NavigationGraph.FORGOT_PASSWORD.route)
+                })
+                Spacer(modifier = Modifier.height(10.dp))
+                AuthButtonComponent(value = "Login", onClick = {
+                    viewModel.signIn(email, password)
+                })
+                Spacer(modifier = Modifier.height(10.dp))
 
-                        TextFieldComponent(
-                            email,
-                            onValueChange = { updatedEmail -> email = updatedEmail.trim() },
-                            label = "Email",
-                            painterResource = painterResource(id = R.drawable.mail_icon)
-                        )
-                        PasswordFieldComponent(
-                            password,
-                            label = "Password",
-                            onValueChange = { updatedPassword ->
-                                password = updatedPassword.trim()
-                            },
-                            painterResource(id = R.drawable.ic_lock)
-                        )
-                        UnderLinedTextComponent(value = "Forgot your password :(", onClick = {
-                            navController.navigate(NavigationGraph.FORGOT_PASSWORD.route)
-                        })
-                        Spacer(modifier = Modifier.height(10.dp))
-                        AuthButtonComponent(value = "Login", onClick = {
-                            viewModel.signIn(email, password)
-                        })
-                        Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(15.dp))
 
-                        Spacer(modifier = Modifier.height(15.dp))
-
-                        ClickableLoginTextComponent(tryToLogin = false, onTextSelected = {
-                            onSignUpClick()
-                            navController.navigate(NavigationGraph.REGISTER.route)
-                        })
-                    }
-                }
+                ClickableLoginTextComponent(tryToLogin = false, onTextSelected = {
+                    onSignUpClick()
+                    navController.navigate(NavigationGraph.REGISTER.route)
+                })
             }
         }
-
+    }
+}
