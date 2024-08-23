@@ -1,11 +1,12 @@
-package com.tlc.data.ui.di
+package com.tlc.data.di
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.tlc.data.ui.repository.firebase.AuthRepositoryImpl
-import com.tlc.data.ui.repository.firebase.ReservationRepositoryImpl
+import com.tlc.data.ui.repository.firebase.PlaceRepositoryImpl
 import com.tlc.domain.repository.firebase.AuthRepository
-import com.tlc.domain.repository.firebase.ReservationRepository
+import com.tlc.domain.repository.firebase.PlaceRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,6 +31,12 @@ object FirebaseModule {
 
     @Provides
     @Singleton
+    fun provideFirebaseStorage(): FirebaseStorage {
+        return FirebaseStorage.getInstance()
+    }
+
+    @Provides
+    @Singleton
     fun provideAuthRepository(
         firebaseAuth: FirebaseAuth,
         firestore: FirebaseFirestore
@@ -41,9 +48,10 @@ object FirebaseModule {
     @Singleton
     fun provideReservationRepository(
         firebaseAuth: FirebaseAuth,
-        firestore: FirebaseFirestore
-    ): ReservationRepository {
-        return ReservationRepositoryImpl(firebaseAuth,firestore)
+        firestore: FirebaseFirestore,
+        storage: FirebaseStorage
+    ): PlaceRepository {
+        return PlaceRepositoryImpl(firebaseAuth,firestore,storage)
 
     }
 }
