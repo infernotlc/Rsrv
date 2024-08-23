@@ -17,7 +17,7 @@ lottieCompose = "6.3.0"
 
 #Coil
 coilCompose = "2.6.0"
-
+gson = "2.11.0"
 #Hilt
 hiltAndroidCompiler = "2.51"
 hiltAndroid = "2.51.1"
@@ -29,7 +29,7 @@ ksp = "1.9.23-1.0.20"
 okhttp = "5.0.0-alpha.14"
 playServicesLocation = "21.3.0"
 retrofit = "2.11.0"
-gson = "2.10.1"
+
 retrofit-converter = "2.11.0"
 okhttp-logging-interceptor= "4.12.0"
 
@@ -50,6 +50,7 @@ firebaseCrashlytics = "19.0.3"
 googleFirebaseCrashlytics = "3.0.2"
 firebasePerf = "21.0.1"
 googleFirebaseFirebasePerf = "1.4.2"
+uiGeometryAndroid = "1.6.8"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -91,6 +92,7 @@ androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtim
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics", version.ref = "firebaseAnalytics" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics", version.ref = "firebaseCrashlytics" }
 firebase-perf = { group = "com.google.firebase", name = "firebase-perf", version.ref = "firebasePerf" }
+androidx-ui-geometry-android = { group = "androidx.compose.ui", name = "ui-geometry-android", version.ref = "uiGeometryAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
