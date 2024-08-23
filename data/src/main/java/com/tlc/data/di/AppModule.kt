@@ -1,4 +1,4 @@
-package com.tlc.data.ui.di
+package com.tlc.data.di
 
 import android.app.Application
 import android.content.Context
