@@ -9,8 +9,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import com.google.gson.Gson
+import com.tlc.domain.model.firebase.PlaceData
 import com.tlc.feature.R
 import com.tlc.feature.feature.admin.AdminScreen
 import com.tlc.feature.feature.auth.forget_password.ForgotPasswordScreen
@@ -19,6 +23,7 @@ import com.tlc.feature.feature.auth.login.LoginScreen
 import com.tlc.feature.feature.auth.register.RegisterScreen
 import com.tlc.feature.feature.component.LoadingLottie
 import com.tlc.feature.feature.customer.CustomerScreen
+import com.tlc.feature.feature.design.DesignScreen
 
 @Composable
 fun RsrvNavigation(
@@ -71,6 +76,19 @@ fun RsrvNavigation(
             composable(NavigationGraph.CUSTOMER_SCREEN.route) {
                 CustomerScreen(navController)
                 onTitleChange("Customer Screen")
+            }
+            composable(
+                route = NavigationGraph.DESIGN_SCREEN.route,
+                arguments = listOf(navArgument("placeJson") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val gson = Gson()
+                val placeJson = backStackEntry.arguments?.getString("placeJson")
+                val place = gson.fromJson(placeJson, PlaceData::class.java)
+                DesignScreen(
+                    navController = navController,
+                    place = place
+                )
+                onTitleChange("Design Screen")
             }
         }
     }
