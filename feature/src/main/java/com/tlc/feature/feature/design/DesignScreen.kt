@@ -1,5 +1,6 @@
 package com.tlc.feature.feature.design
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,17 +39,20 @@ fun DesignScreen(
     val uiState by viewModel.uiState.collectAsState()
     val saveState by viewModel.saveState.collectAsState()
 
+    // Local state for design items
     val designItems = remember { mutableStateListOf<DesignItem>() }
 
-    // Load existing design if any
+    // Load design items when the screen is first loaded
     LaunchedEffect(placeId) {
         viewModel.loadDesign(placeId)
     }
 
-    // Update UI with loaded design
+    // Update local designItems when UI state changes
     LaunchedEffect(uiState.designItems) {
-        designItems.clear()
-        uiState.designItems?.let { designItems.addAll(it) }
+        if (uiState.designItems != null) {
+            designItems.clear()
+            designItems.addAll(uiState.designItems)
+        }
     }
 
     Column(
@@ -61,14 +65,15 @@ fun DesignScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Button(onClick = {
-                // Add a new table
-                designItems.add(
-                    DesignItem(
-                        type = "TABLE",
-                        xPosition = 50f,
-                        yPosition = 50f
-                    )
+                // Add a new table only if it doesn't already exist
+                val newTable = DesignItem(
+                    type = "TABLE",
+                    xPosition = 50f,
+                    yPosition = 50f
                 )
+                if (designItems.none { it.type == "TABLE" && it.xPosition == 50f && it.yPosition == 50f }) {
+                    designItems.add(newTable)
+                }
             }) {
                 Text("Add Table")
             }
@@ -81,14 +86,14 @@ fun DesignScreen(
             }
 
             Button(onClick = {
-                // Add a new chair
-                designItems.add(
-                    DesignItem(
-                        type = "CHAIR",
-                        xPosition = 50f,
-                        yPosition = 50f
-                    )
+                val newChair = DesignItem(
+                    type = "CHAIR",
+                    xPosition = 50f,
+                    yPosition = 50f
                 )
+                if (designItems.none { it.type == "CHAIR" && it.xPosition == 50f && it.yPosition == 50f }) {
+                    designItems.add(newChair)
+                }
             }) {
                 Text("Add Chair")
             }
@@ -100,7 +105,6 @@ fun DesignScreen(
                 .background(Color.LightGray)
                 .padding(8.dp)
         ) {
-            // Display and move design items (tables and chairs)
             designItems.forEach { item ->
                 DraggableItem(
                     item = item,
@@ -112,7 +116,6 @@ fun DesignScreen(
             }
         }
 
-        // Handle UI states like loading, error, and success
         if (uiState.isLoading) {
             CircularProgressIndicator()
         }
