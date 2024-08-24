@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.google.gson.Gson
+import com.tlc.data.remote.dto.firebase_dto.Place
 import com.tlc.domain.model.firebase.PlaceData
 import com.tlc.feature.R
 import com.tlc.feature.feature.admin.AdminScreen
@@ -24,6 +25,8 @@ import com.tlc.feature.feature.auth.register.RegisterScreen
 import com.tlc.feature.feature.component.LoadingLottie
 import com.tlc.feature.feature.customer.CustomerScreen
 import com.tlc.feature.feature.design.DesignScreen
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun RsrvNavigation(
@@ -79,17 +82,26 @@ fun RsrvNavigation(
             }
             composable(
                 route = NavigationGraph.DESIGN_SCREEN.route,
-                arguments = listOf(navArgument("placeJson") { type = NavType.StringType })
+                arguments = listOf(navArgument("placeData") {
+                    type = NavType.StringType // JSON string type
+                })
             ) { backStackEntry ->
-                val gson = Gson()
-                val placeJson = backStackEntry.arguments?.getString("placeJson")
-                val place = gson.fromJson(placeJson, PlaceData::class.java)
-                DesignScreen(
-                    navController = navController,
-                    place = place
-                )
+                val encodedPlaceJson = backStackEntry.arguments?.getString("placeData")
+                val placeJson = encodedPlaceJson?.let {
+                    URLDecoder.decode(it, StandardCharsets.UTF_8.toString())
+                }
+                val place = placeJson?.let { Gson().fromJson(it, Place::class.java) }
+                if (place != null) {
+                    DesignScreen(
+                        navController = navController,
+                        place = place,
+                    )
+                }
                 onTitleChange("Design Screen")
             }
         }
     }
 }
+
+
+
