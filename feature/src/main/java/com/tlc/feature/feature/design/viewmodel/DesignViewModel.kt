@@ -1,5 +1,6 @@
 package com.tlc.feature.feature.design.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tlc.domain.model.firebase.DesignItem
@@ -15,24 +16,26 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@HiltViewModel
-class DesignViewModel @Inject constructor(
-    private val saveDesignUseCase: SaveDesignUseCase,
-    private val loadDesignUseCase: LoadDesignUseCase
-) : ViewModel() {
+    @HiltViewModel
+    class DesignViewModel @Inject constructor(
+        private val saveDesignUseCase: SaveDesignUseCase,
+        private val loadDesignUseCase: LoadDesignUseCase
+    ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(DesignState())
-    val uiState: StateFlow<DesignState> = _uiState.asStateFlow()
+        private val _uiState = MutableStateFlow(DesignState())
+        val uiState: StateFlow<DesignState> = _uiState.asStateFlow()
 
-    private val _saveState = MutableStateFlow(SaveState())
-    val saveState: StateFlow<SaveState> = _saveState.asStateFlow()
+        private val _saveState = MutableStateFlow(SaveState())
+        val saveState: StateFlow<SaveState> = _saveState.asStateFlow()
 
     fun loadDesign(placeId: String) {
         viewModelScope.launch {
+            Log.d("DesignViewModel", "loadDesign called with placeId: $placeId")
             _uiState.value = _uiState.value.copy(isLoading = true)
             loadDesignUseCase.loadDesign(placeId).collect { result ->
                 when (result) {
                     is RootResult.Success -> {
+                        Log.d("DesignViewModel", "Design loaded successfully: ${result.data}")
                         _uiState.value = _uiState.value.copy(
                             designItems = result.data ?: emptyList(),
                             isLoading = false,
@@ -40,6 +43,7 @@ class DesignViewModel @Inject constructor(
                         )
                     }
                     is RootResult.Error -> {
+                        Log.e("DesignViewModel", "Error loading design: ${result.message}")
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             error = result.message ?: "An error occurred"
@@ -53,25 +57,25 @@ class DesignViewModel @Inject constructor(
         }
     }
 
-    fun saveDesign(placeId: String, designItems: List<DesignItem>) {
-        viewModelScope.launch {
-            _saveState.value = SaveState(isSaving = true)
-            saveDesignUseCase.saveDesign(placeId, designItems).collect { result ->
-                when (result) {
-                    is RootResult.Success -> {
-                        _saveState.value = SaveState(isSaving = false, isSaved = true)
-                    }
-                    is RootResult.Error -> {
-                        _saveState.value = SaveState(
-                            isSaving = false,
-                            error = result.message ?: "An error occurred"
-                        )
-                    }
-                    RootResult.Loading -> {
-                        _saveState.value = SaveState(isSaving = true)
+        fun saveDesign(placeId: String, designItems: List<DesignItem>) {
+            viewModelScope.launch {
+                _saveState.value = SaveState(isSaving = true)
+                saveDesignUseCase.saveDesign(placeId, designItems).collect { result ->
+                    when (result) {
+                        is RootResult.Success -> {
+                            _saveState.value = SaveState(isSaving = false, isSaved = true)
+                        }
+                        is RootResult.Error -> {
+                            _saveState.value = SaveState(
+                                isSaving = false,
+                                error = result.message ?: "An error occurred"
+                            )
+                        }
+                        RootResult.Loading -> {
+                            _saveState.value = SaveState(isSaving = true)
+                        }
                     }
                 }
             }
         }
     }
-}
