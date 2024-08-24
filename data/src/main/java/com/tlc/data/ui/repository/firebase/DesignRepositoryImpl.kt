@@ -1,5 +1,6 @@
 package com.tlc.data.ui.repository.firebase
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.tlc.domain.model.firebase.DesignItem
@@ -23,20 +24,17 @@ class DesignRepositoryImpl @Inject constructor(
             val currentUser = firebaseAuth.currentUser
             val userId = currentUser?.uid
             if (userId != null) {
-                firestore.collection("users")
-                    .document(userId)
-                    .collection("places")
-                    .document(placeId)
-                    .collection("design")
-                    .apply {
-                        // Add a batch write to save all design items
-                        val batch = firestore.batch()
-                        designItems.forEach { item ->
-                            val itemRef = this.document(item.id)
-                            batch.set(itemRef, item)
-                        }
-                        batch.commit().await()
-                    }
+                val batch = firestore.batch()
+                designItems.forEach { item ->
+                    val itemRef = firestore.collection("users")
+                        .document(userId)
+                        .collection("places")
+                        .document(placeId)
+                        .collection("design")
+                        .document(item.id)
+                    batch.set(itemRef, item)
+                }
+                batch.commit().await()
                 emit(RootResult.Success(Unit))
             } else {
                 emit(RootResult.Error("User ID is null"))
@@ -46,25 +44,29 @@ class DesignRepositoryImpl @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
+
     override suspend fun getDesign(placeId: String): Flow<RootResult<List<DesignItem>>> = flow {
-        emit(RootResult.Loading)
-        try {
-            val currentUser = firebaseAuth.currentUser
-            val userId = currentUser?.uid
-            if (userId != null) {
-                val querySnapshot =
-                    firestore.collection("users").document(userId)
-                        .collection("places").document(placeId)
-                        .collection("design").get().await()
-                val designItems = querySnapshot.documents.mapNotNull { document ->
-                    document.toObject(DesignItem::class.java)
+            Log.d("DesignRepositoryImpl", "getDesign called with placeId: $placeId")
+            emit(RootResult.Loading)
+            try {
+                val currentUser = firebaseAuth.currentUser
+                val userId = currentUser?.uid
+                if (userId != null) {
+                    val querySnapshot =
+                        firestore.collection("users").document(userId)
+                            .collection("places").document(placeId)
+                            .collection("design").get().await()
+                    val designItems = querySnapshot.documents.mapNotNull { document ->
+                        document.toObject(DesignItem::class.java)
+                    }
+                    Log.d("DesignRepositoryImpl", "Design items fetched: $designItems")
+                    emit(RootResult.Success(designItems))
+                } else {
+                    emit(RootResult.Error("User ID is null"))
                 }
-                emit(RootResult.Success(designItems))
-            } else {
-                emit(RootResult.Error("User ID is null"))
+            } catch (e: Exception) {
+                Log.e("DesignRepositoryImpl", "Error fetching design: ${e.message}")
+                emit(RootResult.Error(e.message ?: "Something went wrong"))
             }
-        } catch (e: Exception) {
-            emit(RootResult.Error(e.message ?: "Something went wrong"))
-        }
-    }.flowOn(Dispatchers.IO)
-}
+        }.flowOn(Dispatchers.IO)
+    }
