@@ -176,7 +176,7 @@ fun MainScreen(
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_vert),
                                         contentDescription = "Settings",
-                                        tint = Color.White,  // Üç nokta menü ikonu beyaz
+                                        tint = Color.White,
                                         modifier = Modifier.size(30.dp)
                                     )
                                 }
@@ -188,7 +188,7 @@ fun MainScreen(
                                     DropdownMenu(
                                         expanded = expanded,
                                         onDismissRequest = { expanded = false },
-                                        Modifier.background(Color.White)  // Dropdown arka planı beyaz
+                                        Modifier.background(Color.White)
                                     ) {
                                         DropdownMenuItem(
                                             text = { Text("Delete Account") },
