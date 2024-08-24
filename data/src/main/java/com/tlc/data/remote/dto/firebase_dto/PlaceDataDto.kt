@@ -9,4 +9,4 @@ data class PlaceDataDto(
     val name: String="",
     val placeImageUrl: String="",
     val capacity: Int=0,
-): Serializable
+)
