@@ -15,34 +15,45 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.tlc.domain.model.firebase.DesignItem
-import kotlin.math.roundToInt
 
 @Composable
 fun DraggableItem(
     item: DesignItem,
+    boundary: Rect,
     onPositionChange: (Offset) -> Unit
 ) {
     var offset by remember { mutableStateOf(Offset(item.xPosition, item.yPosition)) }
 
     Box(
         modifier = Modifier
-            .offset(offset.x.dp, offset.y.dp)
-            .size(50.dp)  // Example size
-            .background(if (item.type == "TABLE") Color.Blue else Color.Red) // Different color for Table and Chair
+            .offset { IntOffset(offset.x.toInt(), offset.y.toInt()) }
+            .size(50.dp)
+            .background(if (item.type == "TABLE") Color.Blue else Color.Red)
             .pointerInput(Unit) {
                 detectDragGestures { change, dragAmount ->
                     change.consumeAllChanges()
-                    val dragFactor = 0.3f // Adjust this factor to slow down the drag speed
-                    offset = offset.copy(
-                        x = offset.x + dragAmount.x * dragFactor,
-                        y = offset.y + dragAmount.y * dragFactor
+
+                    val newX = offset.x + dragAmount.x
+                    val newY = offset.y + dragAmount.y
+
+                    // Constrain within boundary
+                    val constrainedX = newX.coerceIn(
+                        boundary.left,
+                        boundary.right - 50.dp.toPx()
                     )
+                    val constrainedY = newY.coerceIn(
+                        boundary.top,
+                        boundary.bottom - 50.dp.toPx()
+                    )
+
+                    offset = Offset(constrainedX, constrainedY)
                     onPositionChange(offset)
                 }
             }
