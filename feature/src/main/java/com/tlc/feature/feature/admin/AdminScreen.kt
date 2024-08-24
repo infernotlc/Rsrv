@@ -61,6 +61,7 @@ import coil.compose.SubcomposeAsyncImage
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.tlc.data.mapper.firebase_mapper.toPlace
 import com.tlc.data.mapper.firebase_mapper.toPlaceDataDto
 import com.tlc.domain.model.firebase.PlaceData
 import com.tlc.domain.utils.RootResult
@@ -256,13 +257,10 @@ fun AdminScreen(
                                 PlacesCard(
                                     placeData = place,
                                     onClick = {
-                                        val placeData = place.toPlaceDataDto()
-                                        sharedPreferencesHelper.placeName =
-                                            place.name
+                                        val placeData = place.toPlace()
+                                        sharedPreferencesHelper.placeName = place.name
                                         navController.navigate(
-                                            NavigationGraph.getDesignRoute(
-                                                placeData
-                                            )
+                                            NavigationGraph.getDesignRoute(placeData)
                                         )
                                     },
                                     onDelete = {
