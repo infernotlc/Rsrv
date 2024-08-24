@@ -1,8 +1,10 @@
 package com.tlc.domain.model.firebase
 
+import java.io.Serializable
+
 data class PlaceData(
     var name: String = "",
     var capacity: Int = 0,
-    val id: String = "",
-    val placeImageUrl: String
-)
+    var id: String = "",
+    var placeImageUrl: String
+):Serializable
