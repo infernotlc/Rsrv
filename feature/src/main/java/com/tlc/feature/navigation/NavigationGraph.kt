@@ -1,8 +1,7 @@
 package com.tlc.feature.navigation
 
 import com.google.gson.Gson
-import com.tlc.data.remote.dto.firebase_dto.Place
-import com.tlc.data.remote.dto.firebase_dto.PlaceDataDto
+import com.tlc.domain.model.firebase.Place
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
