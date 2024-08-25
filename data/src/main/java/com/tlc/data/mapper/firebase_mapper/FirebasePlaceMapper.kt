@@ -1,6 +1,6 @@
 package com.tlc.data.mapper.firebase_mapper
 
-import com.tlc.data.remote.dto.firebase_dto.Place
+import com.tlc.domain.model.firebase.Place
 import com.tlc.data.remote.dto.firebase_dto.PlaceDataDto
 import com.tlc.domain.model.firebase.PlaceData
 
