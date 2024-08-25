@@ -40,7 +40,7 @@ fun DesignScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Local state for design items
+   
     val designItems = remember { mutableStateListOf<DesignItem>() }
 
     BoxWithConstraints(
@@ -51,7 +51,7 @@ fun DesignScreen(
         val screenWidthPx = with(density) { maxWidth.toPx() }
         val screenHeightPx = with(density) { maxHeight.toPx() }
 
-        // Calculate boundary dynamically
+     
         val boundary = remember {
             Rect(
                 left = 0f,
@@ -61,12 +61,12 @@ fun DesignScreen(
             )
         }
 
-        // Load design items when the screen is first loaded
+       
         LaunchedEffect(placeId) {
             viewModel.loadDesign(placeId)
         }
 
-        // Update local designItems when UI state changes
+        
         LaunchedEffect(uiState.designItems) {
             if (uiState.designItems != null) {
                 designItems.clear()
@@ -136,7 +136,7 @@ fun DesignScreen(
             if (uiState.isLoading) {
                 CircularProgressIndicator()
             }
-
+            
             uiState.error?.let {
                 Text("Error: $it", color = Color.Red)
             }

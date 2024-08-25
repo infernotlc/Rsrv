@@ -1,5 +1,6 @@
 package com.tlc.data.remote.dto.firebase_dto
 
+
 import java.io.Serializable
 import java.util.UUID
 
