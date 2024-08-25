@@ -1,14 +1,13 @@
-package com.tlc.data.remote.dto.firebase_dto
+package com.tlc.domain.model.firebase
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.tlc.domain.model.firebase.PlaceData
 
 data class Place (
     var name: String = "",
     var capacity: Int = 0,
     val id: String = "",
-    val placeImageUrl: String
+    val placeImageUrl: String = ""
     ): Parcelable {
 
     constructor(parcel: Parcel) : this(
