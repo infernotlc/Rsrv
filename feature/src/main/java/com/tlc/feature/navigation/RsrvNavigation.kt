@@ -95,6 +95,7 @@ fun RsrvNavigation(
                     DesignScreen(
                         navController = navController,
                         place = place,
+                        placeId = place.id
                     )
                 }
                 onTitleChange("Design Screen")
