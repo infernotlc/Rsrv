@@ -50,7 +50,6 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,13 +61,13 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.tlc.data.mapper.firebase_mapper.toPlace
-import com.tlc.data.mapper.firebase_mapper.toPlaceDataDto
 import com.tlc.domain.model.firebase.PlaceData
 import com.tlc.domain.utils.RootResult
 import com.tlc.feature.R
 import com.tlc.feature.feature.admin.component.AddPlaceDialog
 import com.tlc.feature.feature.admin.component.ConfirmationDialog
 import com.tlc.feature.feature.admin.component.UpdatePlaceDialog
+import com.tlc.feature.feature.admin.viewmodel.AdminViewModel
 import com.tlc.feature.feature.component.LoadingLottie
 import com.tlc.feature.feature.component.auth_components.AuthButtonComponent
 import com.tlc.feature.navigation.NavigationGraph
