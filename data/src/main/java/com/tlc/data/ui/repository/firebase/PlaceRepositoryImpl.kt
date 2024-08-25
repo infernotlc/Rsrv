@@ -55,10 +55,20 @@ class PlaceRepositoryImpl @Inject constructor(
                 val currentUser = firebaseAuth.currentUser
                 val userId = currentUser?.uid
                 if (userId != null) {
-                    val placeRef =
-                        firestore.collection("users").document(userId).collection("places")
-                            .document(competitionId)
+                    val placeRef = firestore.collection("users")
+                        .document(userId)
+                        .collection("places")
+                        .document(competitionId)
+
+                    val designCollectionRef = placeRef.collection("design")
+
+                    val designDocs = designCollectionRef.get().await()
+                    designDocs.documents.forEach { document ->
+                        document.reference.delete().await()
+                    }
+
                     placeRef.delete().await()
+
                     emit(RootResult.Success(true))
                 } else {
                     emit(RootResult.Error("User ID is null"))
@@ -67,6 +77,7 @@ class PlaceRepositoryImpl @Inject constructor(
                 emit(RootResult.Error(e.message ?: "Something went wrong"))
             }
         }.flowOn(Dispatchers.IO)
+
 
 
     override suspend fun updatePlace(
