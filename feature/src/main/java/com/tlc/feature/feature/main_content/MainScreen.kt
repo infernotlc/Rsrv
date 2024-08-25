@@ -1,7 +1,6 @@
 package com.tlc.feature.feature.main_content
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -66,12 +65,19 @@ fun MainScreen(
     var navigationKey by remember { mutableIntStateOf(0) }
     val context = LocalContext.current
 
+    var currentRoute by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(navController) {
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            currentRoute = destination.route
+        }
+    }
+
     LaunchedEffect(true) {
         loginViewModel.isLoggedIn()
     }
 
     LaunchedEffect(deleteUserState.transaction) {
-        Log.i("MainScreen", "deleteUserState.transaction: ${deleteUserState.transaction}")
         if (deleteUserState.transaction) {
             goToLogin(
                 loginViewModel = loginViewModel,
@@ -138,86 +144,92 @@ fun MainScreen(
         )
     }
 
-    Scaffold( containerColor = Color.Black,
+    Scaffold(
+        containerColor = Color.Black,
         topBar = {
-            appBarTitle?.let { title ->
-                Box(modifier = Modifier.background(Color.Red)) {
-                    CenterAlignedTopAppBar(colors = TopAppBarColors(
-                        actionIconContentColor = Color.White,
-                        containerColor = Color.Black,
-                        navigationIconContentColor = Color.White,
-                        scrolledContainerColor = Color.Red,
-                        titleContentColor = Color.White),
-                        title = {
-                            Text(
-                                text = title,
-                                style = TextStyle(
-                                    color = Color.White,
-                                    fontSize = 25.sp
-                                ),
-                            )
-                        },
-                        navigationIcon = {
-                            if (title != "Customer Screen" && title != "Admin Screen" && title !="Login Screen" && title !="Register Screen" && title !="Forget Password Screen") {
-                                IconButton(onClick = { navController.navigateUp() }) {
-                                    Icon(
-                                        painter = painterResource(R.drawable.ic_left),
-                                        contentDescription = "Back",
-                                        tint = Color.White,  // Geri düğmesi ikonu beyaz
-                                        modifier = Modifier.size(30.dp)
-                                    )
-                                }
-                            }
-                        },
-                        actions = {
-                            if (title == "Customer Screen" || title == "Admin Screen") {
-                                var expanded by remember { mutableStateOf(false) }
-                                IconButton(onClick = { expanded = !expanded }) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_vert),
-                                        contentDescription = "Settings",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(30.dp)
-                                    )
-                                }
-                                MaterialTheme(
-                                    shapes = MaterialTheme.shapes.copy(
-                                        extraSmall = RoundedCornerShape(16.dp)
-                                    )
-                                ) {
-                                    DropdownMenu(
-                                        expanded = expanded,
-                                        onDismissRequest = { expanded = false },
-                                        Modifier.background(Color.White)
-                                    ) {
-                                        DropdownMenuItem(
-                                            text = { Text("Delete Account") },
-                                            onClick = {
-                                                expanded = false
-                                                dialogAction = "Delete Account"
-                                                showDialog = true
-                                            }
-                                        )
-                                        DropdownMenuItem(
-                                            text = { Text("Logout", color = Color.Black) },
-                                            onClick = {
-                                                expanded = false
-                                                dialogAction = "Logout"
-                                                showDialog = true
-                                            }
+            if (currentRoute != NavigationGraph.DESIGN_SCREEN.route) {
+                appBarTitle?.let { title ->
+                    Box(modifier = Modifier.background(Color.Red)) {
+                        CenterAlignedTopAppBar(
+                            colors = TopAppBarColors(
+                                actionIconContentColor = Color.White,
+                                containerColor = Color.Black,
+                                navigationIconContentColor = Color.White,
+                                scrolledContainerColor = Color.Red,
+                                titleContentColor = Color.White
+                            ),
+                            title = {
+                                Text(
+                                    text = title,
+                                    style = TextStyle(
+                                        color = Color.White,
+                                        fontSize = 25.sp
+                                    ),
+                                )
+                            },
+                            navigationIcon = {
+                                if (title != "Customer Screen" && title != "Admin Screen" && title != "Login Screen" && title != "Register Screen" && title != "Forget Password Screen") {
+                                    IconButton(onClick = { navController.navigateUp() }) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_left),
+                                            contentDescription = "Back",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(30.dp)
                                         )
                                     }
                                 }
+                            },
+                            actions = {
+                                if (title == "Customer Screen" || title == "Admin Screen") {
+                                    var expanded by remember { mutableStateOf(false) }
+                                    IconButton(onClick = { expanded = !expanded }) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_vert),
+                                            contentDescription = "Settings",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(30.dp)
+                                        )
+                                    }
+                                    MaterialTheme(
+                                        shapes = MaterialTheme.shapes.copy(
+                                            extraSmall = RoundedCornerShape(16.dp)
+                                        )
+                                    ) {
+                                        DropdownMenu(
+                                            expanded = expanded,
+                                            onDismissRequest = { expanded = false },
+                                            Modifier.background(Color.White)
+                                        ) {
+                                            DropdownMenuItem(
+                                                text = { Text("Delete Account") },
+                                                onClick = {
+                                                    expanded = false
+                                                    dialogAction = "Delete Account"
+                                                    showDialog = true
+                                                }
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text("Logout", color = Color.Black) },
+                                                onClick = {
+                                                    expanded = false
+                                                    dialogAction = "Logout"
+                                                    showDialog = true
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         },
         content = { innerPadding ->
             if (deleteUserState.isLoading || uiState.isLoading) {
                 Column(
-                    Modifier.fillMaxSize()
+                    Modifier
+                        .fillMaxSize()
                         .background(Color.Black),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
@@ -243,6 +255,7 @@ fun MainScreen(
         }
     )
 }
+
 
 private fun goToLogin(loginViewModel: LoginViewModel, navHostController: NavHostController) {
     loginViewModel.signOut()
