@@ -31,7 +31,7 @@ class DesignRepositoryImpl @Inject constructor(
                         .collection("places")
                         .document(placeId)
                         .collection("design")
-                        .document(item.id)
+                        .document(item.designId)
                     batch.set(itemRef, item)
                 }
                 batch.commit().await()
