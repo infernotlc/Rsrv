@@ -1,5 +1,6 @@
 package com.tlc.feature.feature.customer.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tlc.domain.use_cases.customer.GetCustomerPlacesUseCase
@@ -28,18 +29,22 @@ class CustomerViewModel @Inject constructor(
     val designState: StateFlow<DesignState> = _designState.asStateFlow()
 
     fun fetchPlaces() {
+        Log.d("CustomerViewModel", "Fetching places...")
         _placeState.value = GetAllState(isLoading = true, result = Loading)
         viewModelScope.launch {
             getCustomerPlacesUseCase.getCustomerPlaces().collect { result ->
+                Log.d("CustomerViewModel", "Places fetched. Result: $result")
                 _placeState.value = GetAllState(isLoading = false, result = result)
             }
         }
     }
 
     fun fetchDesign(placeId: String) {
+        Log.d("CustomerViewModel", "Fetching design for placeId: $placeId")
         _designState.value = DesignState(isLoading = true, result = Loading)
         viewModelScope.launch {
             loadCustomerDesignUseCase.loadCustomerDesign(placeId).collect { result ->
+                Log.d("CustomerViewModel", "Design fetched. Result: $result")
                 _designState.value = DesignState(isLoading = false, result = result)
             }
         }
