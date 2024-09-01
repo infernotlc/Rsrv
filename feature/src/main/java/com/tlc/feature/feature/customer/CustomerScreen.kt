@@ -43,6 +43,7 @@ fun CustomerScreen(
     val designState by viewModel.designState.collectAsState()
 
     LaunchedEffect(Unit) {
+        Log.d("CustomerScreen", "LaunchedEffect triggered, fetching places")
         viewModel.fetchPlaces()
     }
 
@@ -56,6 +57,7 @@ fun CustomerScreen(
             ) {
                 when (placesState.result) {
                     is RootResult.Loading -> {
+                        Log.d("CustomerScreen", "Loading places...")
                         CircularProgressIndicator(
                             color = Color.Black,
                             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -64,11 +66,13 @@ fun CustomerScreen(
 
                     is RootResult.Success -> {
                         val places = (placesState.result as RootResult.Success<List<Place>>).data ?: emptyList()
+                        Log.d("CustomerScreen", "Places loaded: ${places.size} places")
                         LazyColumn {
                             items(places) { place ->
                                 PlaceItem(
                                     place = place,
                                     onClick = {
+                                        Log.d("CustomerScreen", "Place clicked: ${place.name}, ID: ${place.id}")
                                         viewModel.fetchDesign(place.id)
                                     }
                                 )
@@ -77,8 +81,10 @@ fun CustomerScreen(
                     }
 
                     is RootResult.Error -> {
+                        val errorMessage = (placesState.result as RootResult.Error).message
+                        Log.e("CustomerScreen", "Error loading places: $errorMessage")
                         Text(
-                            text = (placesState.result as RootResult.Error).message,
+                            text = errorMessage,
                             color = Color.Red,
                             modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
@@ -89,6 +95,7 @@ fun CustomerScreen(
 
                 when (designState.result) {
                     is RootResult.Loading -> {
+                        Log.d("CustomerScreen", "Loading design...")
                         CircularProgressIndicator(
                             color = Color.White,
                             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -97,14 +104,17 @@ fun CustomerScreen(
 
                     is RootResult.Success -> {
                         val designItems = (designState.result as RootResult.Success<List<DesignItem>>).data
+                        Log.d("CustomerScreen", "Design loaded with ${designItems?.size ?: 0} items")
                         if (designItems != null) {
                             DesignPreview(designItems)
                         }
                     }
 
                     is RootResult.Error -> {
+                        val errorMessage = (designState.result as RootResult.Error).message
+                        Log.e("CustomerScreen", "Error loading design: $errorMessage")
                         Text(
-                            text = (designState.result as RootResult.Error).message,
+                            text = errorMessage,
                             color = Color.Red,
                             modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
@@ -117,8 +127,10 @@ fun CustomerScreen(
     )
 }
 
+
 @Composable
 fun PlaceItem(place: Place, onClick: () -> Unit) {
+    Log.d("PlaceItem", "Displaying place: ${place.name}, ID: ${place.id}")
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -128,22 +140,24 @@ fun PlaceItem(place: Place, onClick: () -> Unit) {
         Text(
             text = place.name,
             modifier = Modifier.padding(16.dp),
-            color = Color.Black // Ensure the text color is visible against the background
+            color = Color.Black
         )
     }
 }
 
+
 @Composable
 fun DesignPreview(designItems: List<DesignItem>) {
+    Log.d("DesignPreview", "Rendering design preview with ${designItems.size} items")
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(300.dp)
-            .padding(8.dp)
-            .background(Color.Blue),
+            .height(600.dp)
+            .background(Color.Gray),
         contentAlignment = Alignment.Center
     ) {
         if (designItems.isEmpty()) {
+            Log.d("DesignPreview", "No design items available")
             Text(
                 text = "No Design Available",
                 color = Color.Black
@@ -151,17 +165,18 @@ fun DesignPreview(designItems: List<DesignItem>) {
         } else {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 designItems.forEach { item ->
+                    Log.d("DesignPreview", "Drawing item: $item")
                     when (item.type) {
-                        "table" -> {
+                        "TABLE" -> {
                             drawCircle(
-                                color = Color.Blue,
+                                color = Color.Red,
                                 radius = 30f,
                                 center = Offset(item.xPosition, item.yPosition)
                             )
                         }
-                        "chair" -> {
+                        "CHAIR" -> {
                             drawRect(
-                                color = Color.Green,
+                                color = Color.Black,
                                 topLeft = Offset(item.xPosition, item.yPosition),
                                 size = Size(30f, 30f)
                             )
