@@ -4,9 +4,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.tlc.data.ui.repository.firebase.AuthRepositoryImpl
+import com.tlc.data.ui.repository.firebase.CustomerRepositoryImpl
 import com.tlc.data.ui.repository.firebase.DesignRepositoryImpl
 import com.tlc.data.ui.repository.firebase.PlaceRepositoryImpl
 import com.tlc.domain.repository.firebase.AuthRepository
+import com.tlc.domain.repository.firebase.CustomerRepository
 import com.tlc.domain.repository.firebase.DesignRepository
 import com.tlc.domain.repository.firebase.PlaceRepository
 import dagger.Module
@@ -63,5 +65,12 @@ object FirebaseModule {
         firestore: FirebaseFirestore,
     ):DesignRepository {
         return DesignRepositoryImpl(firestore,firebaseAuth)
+    }
+    @Provides
+    @Singleton
+    fun provideCustomerRepository(
+        firestore: FirebaseFirestore
+    ):CustomerRepository{
+        return CustomerRepositoryImpl(firestore)
     }
 }

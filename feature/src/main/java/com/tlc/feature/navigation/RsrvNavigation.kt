@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -14,8 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.google.gson.Gson
-import com.tlc.data.remote.dto.firebase_dto.Place
-import com.tlc.domain.model.firebase.PlaceData
+import com.tlc.domain.model.firebase.Place
 import com.tlc.feature.R
 import com.tlc.feature.feature.admin.AdminScreen
 import com.tlc.feature.feature.auth.forget_password.ForgotPasswordScreen
