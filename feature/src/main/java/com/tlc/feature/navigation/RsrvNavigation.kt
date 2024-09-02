@@ -81,7 +81,7 @@ fun RsrvNavigation(
             composable(
                 route = NavigationGraph.DESIGN_SCREEN.route,
                 arguments = listOf(navArgument("placeData") {
-                    type = NavType.StringType // JSON string type
+                    type = NavType.StringType
                 })
             ) { backStackEntry ->
                 val encodedPlaceJson = backStackEntry.arguments?.getString("placeData")
