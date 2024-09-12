@@ -79,7 +79,6 @@ fun DesignScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Button(onClick = {
-                    // Add a new table only if it doesn't already exist
                     val newTable = DesignItem(
                         type = "TABLE",
                         xPosition = 50f,
