@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -51,6 +53,7 @@ fun CustomerScreen(
     val placesState by viewModel.placeState.collectAsState()
     val designState by viewModel.designState.collectAsState()
     var showDesignPreview by remember { mutableStateOf(false) }
+    var selectedPlaceId by remember { mutableStateOf("") } // Store the selected placeId
 
     LaunchedEffect(Unit) {
         Log.d("CustomerScreen", "LaunchedEffect triggered, fetching places")
@@ -74,7 +77,7 @@ fun CustomerScreen(
                             modifier = Modifier.padding(16.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.ArrowBack,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
                                 tint = Color.Black
                             )
@@ -98,14 +101,14 @@ fun CustomerScreen(
                                 is RootResult.Success -> {
                                     val designItems = (designState.result as RootResult.Success<List<DesignItem>>).data ?: emptyList()
                                     Log.d("CustomerScreen", "Rendering design preview with ${designItems.size} items")
-                                    DesignPreview(designItems)
+                                    DesignPreview(designItems, navController, placeId = selectedPlaceId) // Pass the selectedPlaceId
                                 }
 
                                 is RootResult.Error -> {
                                     val errorMessage = (designState.result as RootResult.Error).message
                                     Log.e("CustomerScreen", "Error loading design: $errorMessage")
                                     Text(
-                                        text = errorMessage ?: "Failed to load design",
+                                        text = errorMessage,
                                         color = Color.Red,
                                         modifier = Modifier.align(Alignment.Center)
                                     )
@@ -141,6 +144,7 @@ fun CustomerScreen(
                                         onClick = {
                                             Log.d("CustomerScreen", "Place clicked: ${place.name}, ID: ${place.id}")
                                             viewModel.fetchDesign(place.id)
+                                            selectedPlaceId = place.id // Store the selected placeId
                                             showDesignPreview = true
                                         }
                                     )
@@ -188,43 +192,44 @@ fun PlaceItem(place: Place, onClick: () -> Unit) {
 
 
 @Composable
-fun DesignPreview(designItems: List<DesignItem>) {
-    Log.d("DesignPreview", "Rendering design preview with ${designItems.size} items")
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(600.dp)
-            .background(Color.White),
-        contentAlignment = Alignment.Center
-    ) {
-        if (designItems.isEmpty()) {
-            Log.d("DesignPreview", "No design items available")
-            Text(
-                text = "No Design Available",
-                color = Color.Black
-            )
-        } else {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                designItems.forEach { item ->
-                    Log.d("DesignPreview", "Drawing item: $item")
-                    when (item.type) {
-                        "TABLE" -> {
-                            drawCircle(
-                                color = Color.Red,
-                                radius = 30f,
-                                center = Offset(item.xPosition, item.yPosition)
-                            )
-                        }
-                        "CHAIR" -> {
-                            drawRect(
-                                color = Color.Black,
-                                topLeft = Offset(item.xPosition, item.yPosition),
-                                size = Size(30f, 30f)
-                            )
-                        }
+fun DesignPreview(designItems: List<DesignItem>, navController: NavHostController, placeId: String) {
+    Log.d("DesignPreview", "Received placeId: $placeId")
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            designItems.forEach { item ->
+                when (item.type) {
+                    "TABLE" -> {
+                        drawCircle(
+                            color = if (item.isReserved) Color.Gray else Color.Red,
+                            radius = 30f,
+                            center = Offset(item.xPosition, item.yPosition)
+                        )
+                    }
+                    "CHAIR" -> {
+                        drawRect(
+                            color = if (item.isReserved) Color.Gray else Color.Black,
+                            topLeft = Offset(item.xPosition, item.yPosition),
+                            size = Size(30f, 30f)
+                        )
                     }
                 }
             }
+        }
+
+        Button(
+            onClick = {
+                if (placeId.isNotEmpty()) {
+                    navController.navigate("reservation_screen/$placeId")
+                } else {
+                    Log.e("NavigationError", "placeId is empty!")
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        ) {
+            Text("Make a Reservation")
         }
     }
 }
