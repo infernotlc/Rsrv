@@ -147,7 +147,7 @@ fun MainScreen(
     Scaffold(
         containerColor = Color.Black,
         topBar = {
-            if (currentRoute != NavigationGraph.DESIGN_SCREEN.route) {
+            if (currentRoute != NavigationGraph.DESIGN_SCREEN.route && currentRoute != NavigationGraph.RESERVATION_SCREEN.route) {
                 appBarTitle?.let { title ->
                     Box(modifier = Modifier.background(Color.Red)) {
                         CenterAlignedTopAppBar(
