@@ -1,5 +1,6 @@
 package com.tlc.feature.navigation
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -23,7 +24,9 @@ import com.tlc.feature.feature.auth.register.RegisterScreen
 import com.tlc.feature.feature.component.LoadingLottie
 import com.tlc.feature.feature.customer.CustomerScreen
 import com.tlc.feature.feature.design.DesignScreen
+import com.tlc.feature.feature.reservation.ReservationScreen
 import java.net.URLDecoder
+import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 @Composable
@@ -98,9 +101,23 @@ fun RsrvNavigation(
                 }
                 onTitleChange("Design Screen")
             }
+            composable(
+                route = NavigationGraph.RESERVATION_SCREEN.route,
+                arguments = listOf(navArgument("placeId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val placeId = backStackEntry.arguments?.getString("placeId")
+                Log.d("Navigation", "Navigating to ReservationScreen with placeId: $placeId")
+
+                if (placeId != null) {
+                    ReservationScreen(navController = navController, placeId = placeId)
+                } else {
+                    Log.e("NavigationError", "Failed to retrieve placeId from arguments!")
+                }
+            }
+
+
+
         }
     }
 }
-
-
 
