@@ -6,11 +6,14 @@ import com.google.firebase.storage.FirebaseStorage
 import com.tlc.data.ui.repository.firebase.AuthRepositoryImpl
 import com.tlc.data.ui.repository.firebase.CustomerRepositoryImpl
 import com.tlc.data.ui.repository.firebase.DesignRepositoryImpl
+import com.tlc.data.ui.repository.firebase.MakeAReservationRepositoryImpl
 import com.tlc.data.ui.repository.firebase.PlaceRepositoryImpl
 import com.tlc.domain.repository.firebase.AuthRepository
 import com.tlc.domain.repository.firebase.CustomerRepository
 import com.tlc.domain.repository.firebase.DesignRepository
+import com.tlc.domain.repository.firebase.MakeAReservationRepository
 import com.tlc.domain.repository.firebase.PlaceRepository
+import com.tlc.domain.use_cases.reservation.MakeAReservationUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -72,5 +75,13 @@ object FirebaseModule {
         firestore: FirebaseFirestore
     ):CustomerRepository{
         return CustomerRepositoryImpl(firestore)
+    }
+    @Provides
+    @Singleton
+    fun provideMakeAReservationRepository(
+        firestore: FirebaseFirestore,
+        firebaseAuth: FirebaseAuth
+    ): MakeAReservationRepository {
+        return MakeAReservationRepositoryImpl(firestore, firebaseAuth)
     }
 }
