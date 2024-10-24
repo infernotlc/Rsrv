@@ -37,7 +37,7 @@ Admin Module: Features related to place management and design creation.
 Customer Module: Features for customers to browse and reserve places.
 Data Module: Repository and use cases to interact with Firebase.
 Core Module: Common utilities and shared components (UI elements, theme, etc.).
-Screenshots
+<p align="left-side" Screenshots: >
 <p align="center">
   <img src="https://github.com/user-attachments/assets/66761443-5ec1-4606-8101-98c7f477b09b" width="300">
   <img src="https://github.com/user-attachments/assets/c09d0586-e348-46fd-8658-8a23b5030471" width="300">
