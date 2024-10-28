@@ -4,6 +4,9 @@ A multi-module reservation app built with Kotlin, Jetpack Compose, and Firebase.
 Overview
 This app allows admins to create places with customizable designs (tables and chairs) and lets customers browse these places, make reservations, and view availability. It leverages Jetpack Compose for UI and follows a multi-module architecture for better scalability and maintainability.
 
+Flowchart link:
+https://drive.google.com/file/d/1K_UbTClfNRs3TlYI3QfC7rusKMr2XQje/view?usp=sharing
+
 Features
 Admin Dashboard:
 
