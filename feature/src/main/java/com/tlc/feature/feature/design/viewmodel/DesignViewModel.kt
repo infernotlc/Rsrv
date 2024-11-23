@@ -4,6 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tlc.domain.model.firebase.DesignItem
+import com.tlc.domain.model.firebase.Reservation
+import com.tlc.domain.use_cases.customer.ReservationUseCase
+import com.tlc.domain.use_cases.customer.SaveReservationUseCase
 import com.tlc.domain.use_cases.design.LoadDesignUseCase
 import com.tlc.domain.use_cases.design.SaveDesignUseCase
 import com.tlc.domain.utils.RootResult
@@ -19,7 +22,9 @@ import javax.inject.Inject
     @HiltViewModel
     class DesignViewModel @Inject constructor(
         private val saveDesignUseCase: SaveDesignUseCase,
-        private val loadDesignUseCase: LoadDesignUseCase
+        private val loadDesignUseCase: LoadDesignUseCase,
+        private val reservationUseCase: ReservationUseCase,
+        private val saveReservationUseCase: SaveReservationUseCase
     ) : ViewModel() {
 
         private val _uiState = MutableStateFlow(DesignState())
@@ -78,4 +83,7 @@ import javax.inject.Inject
                 }
             }
         }
+
+
     }
+
