@@ -3,8 +3,12 @@ package com.tlc.feature.feature.customer.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tlc.domain.model.firebase.DesignItem
+import com.tlc.domain.model.firebase.Reservation
 import com.tlc.domain.use_cases.customer.GetCustomerPlacesUseCase
 import com.tlc.domain.use_cases.customer.LoadCustomerDesignUseCase
+import com.tlc.domain.use_cases.customer.ReservationUseCase
+import com.tlc.domain.use_cases.customer.SaveReservationUseCase
 import com.tlc.domain.utils.RootResult
 import com.tlc.feature.feature.customer.state.GetAllState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,3 +54,4 @@ class CustomerViewModel @Inject constructor(
         }
     }
 }
+
