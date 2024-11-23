@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -39,22 +40,30 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.tlc.domain.model.firebase.DesignItem
 import com.tlc.domain.model.firebase.Place
+import com.tlc.domain.model.firebase.Reservation
 import com.tlc.domain.utils.RootResult
 import com.tlc.feature.feature.customer.viewmodel.CustomerViewModel
+import com.tlc.feature.feature.customer.viewmodel.ReservationViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun CustomerScreen(
     navController: NavHostController,
-    viewModel: CustomerViewModel = hiltViewModel(),
+    viewModel: ReservationViewModel = hiltViewModel(),
+    cusViewModel: CustomerViewModel = hiltViewModel()
 ) {
-    val placesState by viewModel.placeState.collectAsState()
-    val designState by viewModel.designState.collectAsState()
+    val placesState by cusViewModel.placeState.collectAsState()
+    val designState by cusViewModel.designState.collectAsState()
     var showDesignPreview by remember { mutableStateOf(false) }
+    var selectedDate by remember { mutableStateOf<String?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
+    val openDatePicker = {
+        showDatePicker= true
+    }
     LaunchedEffect(Unit) {
         Log.d("CustomerScreen", "LaunchedEffect triggered, fetching places")
-        viewModel.fetchPlaces()
+        cusViewModel.fetchPlaces()
     }
 
     Scaffold(
@@ -98,8 +107,22 @@ fun CustomerScreen(
                                 is RootResult.Success -> {
                                     val designItems = (designState.result as RootResult.Success<List<DesignItem>>).data ?: emptyList()
                                     Log.d("CustomerScreen", "Rendering design preview with ${designItems.size} items")
-                                    DesignPreview(designItems)
+
+                                    selectedDate?.let { it1 ->
+                                        DesignPreview(
+                                            designItems = designItems,
+                                            selectedDate= it1,
+                                            placeId=placeId,
+                                            onReserveClick = { selectedItems ->
+                                                viewModel.saveReservation(placeId, Reservation(
+                                                    selectedDate!!, selectedItems.toString()
+                                                ))
+                                            }
+                                        )
+                                    }
                                 }
+
+
 
                                 is RootResult.Error -> {
                                     val errorMessage = (designState.result as RootResult.Error).message
@@ -140,7 +163,7 @@ fun CustomerScreen(
                                         place = place,
                                         onClick = {
                                             Log.d("CustomerScreen", "Place clicked: ${place.name}, ID: ${place.id}")
-                                            viewModel.fetchDesign(place.id)
+                                            cusViewModel.fetchDesign(place.id)
                                             showDesignPreview = true
                                         }
                                     )
@@ -188,8 +211,14 @@ fun PlaceItem(place: Place, onClick: () -> Unit) {
 
 
 @Composable
-fun DesignPreview(designItems: List<DesignItem>) {
-    Log.d("DesignPreview", "Rendering design preview with ${designItems.size} items")
+fun DesignPreview(
+    designItems: List<DesignItem>,
+    selectedDate: String,
+    placeId: String,
+    onReserveClick: (List<DesignItem>) -> Unit
+) {
+    var selectedItems by remember { mutableStateOf(emptyList<DesignItem>()) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -198,7 +227,6 @@ fun DesignPreview(designItems: List<DesignItem>) {
         contentAlignment = Alignment.Center
     ) {
         if (designItems.isEmpty()) {
-            Log.d("DesignPreview", "No design items available")
             Text(
                 text = "No Design Available",
                 color = Color.Black
@@ -206,23 +234,32 @@ fun DesignPreview(designItems: List<DesignItem>) {
         } else {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 designItems.forEach { item ->
-                    Log.d("DesignPreview", "Drawing item: $item")
+                    val isSelected = selectedItems.contains(item)
                     when (item.type) {
-                        "TABLE" -> {
-                            drawCircle(
-                                color = Color.Red,
-                                radius = 30f,
-                                center = Offset(item.xPosition, item.yPosition)
-                            )
-                        }
-                        "CHAIR" -> {
-                            drawRect(
-                                color = Color.Black,
-                                topLeft = Offset(item.xPosition, item.yPosition),
-                                size = Size(30f, 30f)
-                            )
-                        }
+                        "TABLE" -> drawCircle(
+                            color = if (isSelected) Color.Green else Color.Red,
+                            radius = 30f,
+                            center = Offset(item.xPosition, item.yPosition)
+                        )
+                        "CHAIR" -> drawRect(
+                            color = if (isSelected) Color.Green else Color.Black,
+                            topLeft = Offset(item.xPosition, item.yPosition),
+                            size = Size(30f, 30f)
+                        )
                     }
+                }
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                Text(text = "Select items to reserve", color = Color.Black)
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { onReserveClick(selectedItems) },
+                    enabled = selectedItems.isNotEmpty()
+                ) {
+                    Text(text = "Make a Reservation")
                 }
             }
         }
