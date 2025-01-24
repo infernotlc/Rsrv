@@ -12,7 +12,8 @@ enum class NavigationGraph(val route: String) {
     FORGOT_PASSWORD("forgot_password"),
     ADMIN_SCREEN("admin_screen"),
     DESIGN_SCREEN("design_screen/{placeData}"),
-    CUSTOMER_SCREEN("customer_screen");
+    CUSTOMER_SCREEN("customer_screen"),
+    RESERVATION_SCREEN("reservation_screen");
 
     companion object {
         fun getDesignRoute(place: Place): String {
