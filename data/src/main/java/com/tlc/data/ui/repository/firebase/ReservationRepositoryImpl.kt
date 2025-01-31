@@ -135,7 +135,7 @@ class ReservationRepositoryImpl @Inject constructor(
                 .document(placeId)
                 .collection("reservations")
                 .get()
-                .await()
+                .await() //
 
             snapshot.documents.mapNotNull { doc ->
                 doc.toObject(Reservation::class.java).also {
