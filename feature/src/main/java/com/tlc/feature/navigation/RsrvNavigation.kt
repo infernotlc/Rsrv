@@ -23,7 +23,7 @@ import com.tlc.feature.feature.auth.register.RegisterScreen
 import com.tlc.feature.feature.component.LoadingLottie
 import com.tlc.feature.feature.customer.CustomerScreen
 import com.tlc.feature.feature.design.DesignScreen
-import com.tlc.feature.feature.reservation.ReservationScreen
+import com.tlc.feature.feature.reservation.SaveReservationScreen
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -76,7 +76,7 @@ fun RsrvNavigation(
                 onTitleChange("Admin Screen")
             }
             composable(NavigationGraph.CUSTOMER_SCREEN.route) {
-                CustomerScreen(navController )
+                CustomerScreen(navController)
                 onTitleChange("Customer Screen")
             }
             composable(
@@ -99,25 +99,25 @@ fun RsrvNavigation(
                 }
                 onTitleChange("Design Screen")
             }
-            composable(
-                "reservation_screen/{placeId}/{chairId}",
-                arguments = listOf(
-                    navArgument("placeId") { type = NavType.StringType },
-                    navArgument("chairId") { type = NavType.StringType }
-                )
-            ) { backStackEntry ->
-                val placeId = backStackEntry.arguments?.getString("placeId")
-                val chairId = backStackEntry.arguments?.getString("chairId")
-                if (placeId != null && chairId != null) {
-                    ReservationScreen(placeId = placeId, chairId = chairId, navController = navController)
+            composable("customer_screen") {
+                CustomerScreen(navController = navController)
+            }
+                composable(
+                    route = "save_reservation_screen/{userId}/{placeId}/{chairId}",
+                    arguments = listOf(
+                        navArgument("placeId") { type = NavType.StringType },
+                        navArgument("chairId") { type = NavType.StringType },
+                    )
+                ) { backStackEntry ->
+                    val placeId = backStackEntry.arguments?.getString("placeId") ?: ""
+                    val chairId = backStackEntry.arguments?.getString("chairId") ?: ""
+
+                    SaveReservationScreen(
+                        navController = navController,
+                        placeId = placeId,
+                        chairId = chairId
+                    )
                 }
-                onTitleChange("Reservation Screen")
             }
         }
-
-        }
     }
-
-
-
-
