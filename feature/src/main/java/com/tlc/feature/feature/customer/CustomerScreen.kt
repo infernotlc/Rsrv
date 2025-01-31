@@ -1,22 +1,22 @@
 package com.tlc.feature.feature.customer
 
 import android.annotation.SuppressLint
+import android.util.Base64
 import android.util.Log
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -32,16 +32,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Timestamp
+import com.google.gson.Gson
 import com.tlc.domain.model.firebase.DesignItem
 import com.tlc.domain.model.firebase.Place
+import com.tlc.domain.model.firebase.Reservation
 import com.tlc.domain.utils.RootResult
 import com.tlc.feature.feature.customer.viewmodel.CustomerViewModel
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -52,6 +57,10 @@ fun CustomerScreen(
     val placesState by viewModel.placeState.collectAsState()
     val designState by viewModel.designState.collectAsState()
     var showDesignPreview by remember { mutableStateOf(false) }
+    var selectedPlaceId by remember { mutableStateOf<String?>(null) }
+    var userId by remember { mutableStateOf<String?>(null) }
+
+
 
     LaunchedEffect(Unit) {
         Log.d("CustomerScreen", "LaunchedEffect triggered, fetching places")
@@ -69,7 +78,10 @@ fun CustomerScreen(
                     Column {
                         IconButton(
                             onClick = {
-                                Log.d("CustomerScreen", "Back button clicked, closing design preview")
+                                Log.d(
+                                    "CustomerScreen",
+                                    "Back button clicked, closing design preview"
+                                )
                                 showDesignPreview = false
                             },
                             modifier = Modifier.padding(16.dp)
@@ -89,7 +101,6 @@ fun CustomerScreen(
                         ) {
                             when (designState.result) {
                                 is RootResult.Loading -> {
-                                    Log.d("CustomerScreen", "Loading design preview...")
                                     CircularProgressIndicator(
                                         color = Color.Black,
                                         modifier = Modifier.align(Alignment.Center)
@@ -97,14 +108,23 @@ fun CustomerScreen(
                                 }
 
                                 is RootResult.Success -> {
-                                    val designItems = (designState.result as RootResult.Success<List<DesignItem>>).data ?: emptyList()
-                                    Log.d("CustomerScreen", "Rendering design preview with ${designItems.size} items")
-                                    DesignPreview(designItems)
+                                    val designItems =
+                                        (designState.result as RootResult.Success<List<DesignItem>>).data
+                                            ?: emptyList()
+                                    DesignPreview(
+                                        designItems,
+                                        onChairClick = { selectedChair ->
+                                            if (selectedPlaceId != null) {
+                                                navController.navigate("save_reservation_screen/${userId}/${selectedPlaceId}/${selectedChair.designId}")
+                                            }
+                                        }
+                                    )
                                 }
 
+
                                 is RootResult.Error -> {
-                                    val errorMessage = (designState.result as RootResult.Error).message
-                                    Log.e("CustomerScreen", "Error loading design: $errorMessage")
+                                    val errorMessage =
+                                        (designState.result as RootResult.Error).message
                                     Text(
                                         text = errorMessage ?: "Failed to load design",
                                         color = Color.Red,
@@ -112,7 +132,7 @@ fun CustomerScreen(
                                     )
                                 }
 
-                                else -> Unit
+                                else -> {}
                             }
                         }
                     }
@@ -125,7 +145,6 @@ fun CustomerScreen(
                 ) {
                     when (placesState.result) {
                         is RootResult.Loading -> {
-                            Log.d("CustomerScreen", "Loading places...")
                             CircularProgressIndicator(
                                 color = Color.Black,
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -133,14 +152,15 @@ fun CustomerScreen(
                         }
 
                         is RootResult.Success -> {
-                            val places = (placesState.result as RootResult.Success<List<Place>>).data ?: emptyList()
-                            Log.d("CustomerScreen", "Places loaded: ${places.size} places")
+                            val places =
+                                (placesState.result as RootResult.Success<List<Place>>).data
+                                    ?: emptyList()
                             LazyColumn {
                                 items(places) { place ->
                                     PlaceItem(
                                         place = place,
                                         onClick = {
-                                            Log.d("CustomerScreen", "Place clicked: ${place.name}, ID: ${place.id}")
+                                            selectedPlaceId = place.id
                                             viewModel.fetchDesign(place.id)
                                             showDesignPreview = true
                                         }
@@ -151,7 +171,6 @@ fun CustomerScreen(
 
                         is RootResult.Error -> {
                             val errorMessage = (placesState.result as RootResult.Error).message
-                            Log.e("CustomerScreen", "Error loading places: $errorMessage")
                             Text(
                                 text = errorMessage,
                                 color = Color.Red,
@@ -159,15 +178,13 @@ fun CustomerScreen(
                             )
                         }
 
-                        else -> Unit
+                        else -> {}
                     }
                 }
             }
         }
     )
 }
-
-
 
 
 @Composable
@@ -189,8 +206,13 @@ fun PlaceItem(place: Place, onClick: () -> Unit) {
 
 
 @Composable
-fun DesignPreview(designItems: List<DesignItem>) {
-    Log.d("DesignPreview", "Rendering design preview with ${designItems.size} items")
+fun DesignPreview(
+    designItems: List<DesignItem>,
+    onChairClick: (DesignItem) -> Unit = {}
+) {
+    val density = LocalDensity.current.density  // Get screen density for scaling
+    val navController = rememberNavController()
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -199,28 +221,38 @@ fun DesignPreview(designItems: List<DesignItem>) {
         contentAlignment = Alignment.Center
     ) {
         if (designItems.isEmpty()) {
-            Log.d("DesignPreview", "No design items available")
             Text(
                 text = "No Design Available",
                 color = Color.Black
             )
         } else {
-            Canvas(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize()) {
                 designItems.forEach { item ->
-                    Log.d("DesignPreview", "Drawing item: $item")
                     when (item.type) {
                         "TABLE" -> {
-                            drawCircle(
-                                color = Color.Red,
-                                radius = 30f,
-                                center = Offset(item.xPosition, item.yPosition)
+                            Box(
+                                modifier = Modifier
+                                    .offset(
+                                        (item.xPosition / density).dp,
+                                        (item.yPosition / density).dp
+                                    )
+                                    .size(30.dp)
+                                    .background(Color.Red)
                             )
                         }
+
                         "CHAIR" -> {
-                            drawRect(
-                                color = Color.Black,
-                                topLeft = Offset(item.xPosition, item.yPosition),
-                                size = Size(30f, 30f)
+                            Box(
+                                modifier = Modifier
+                                    .offset(
+                                        (item.xPosition / density).dp,
+                                        (item.yPosition / density).dp
+                                    )
+                                    .size(20.dp)
+                                    .background(Color.Black)
+                                    .clickable {
+                                        onChairClick(item)  // Update the selected chair state in the view model
+                                    }
                             )
                         }
                     }

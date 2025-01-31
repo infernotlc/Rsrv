@@ -34,10 +34,10 @@ class PlaceRepositoryImpl @Inject constructor(
                     val placeId =
                         firestore.collection("users").document(userId).collection("places")
                             .document().id
-                    val competitionInfo =
+                    val placeInfo =
                         placeData.copy(id = placeId).toPlaceDataDto()
                     firestore.collection("users").document(userId).collection("places")
-                        .document(placeId).set(competitionInfo).await()
+                        .document(placeId).set(placeInfo).await()
                     emit(RootResult.Success(true))
                 } else {
                     emit(RootResult.Error("User ID is null"))

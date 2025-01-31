@@ -49,15 +49,17 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":data"))
 
+    //Requirements
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.compose.material)
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.foundation.layout)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
@@ -85,6 +87,6 @@ dependencies {
 
     // Datastore
     implementation(libs.androidx.datastore.preferences)
-
+    //Gson
     implementation (libs.gson)
 }
