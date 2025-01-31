@@ -1,7 +1,6 @@
 package com.tlc.data.ui.repository.firebase
 
 import android.util.Log
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.tlc.domain.model.firebase.Reservation
@@ -14,44 +13,62 @@ class ReservationRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth
 ) : ReservationRepository {
 
-    override suspend fun saveReservation(
-        chairId: String,
-        tableId: String,
-        customerId: String,
-        date: String,
-        time: String,
-        placeId: String,
-        isApproved: Boolean,
-        timestamp: Timestamp
-    ) {
-        val currentUserId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
-        Log.d("ReservationRepository", "Saving reservation for chairId: $chairId, tableId: $tableId")
+        override suspend fun saveReservation(placeId: String, reservations: List<Reservation>): Result<Unit> {
+            return try {
+                val adminUserId = getAdminUserIdByPlace(placeId)
+                    ?: return Result.failure(Exception("Admin User ID not found for this place"))
 
-        try {
-            val reservation = mapOf(
-                "chairId" to chairId,
-                "tableId" to tableId,
-                "customerId" to customerId,
-                "date" to date,
-                "time" to time,
-                "isApproved" to isApproved,
-                "timestamp" to timestamp
-            )
+                val reservationRef = firestore.collection("users")
+                    .document(adminUserId)
+                    .collection("places")
+                    .document(placeId)
+                    .collection("reservations")
 
-            firestore.collection("users")
-                .document(currentUserId)
-                .collection("places")
-                .document(placeId)
-                .collection("reservations")
-                .add(reservation)
-                .await()
+                reservations.forEach { reservation ->
+                    val newDocRef = reservationRef.document()
+                    newDocRef.set(reservation).await()
+                }
 
-            Log.d("ReservationRepository", "Reservation saved successfully for chairId: $chairId")
-        } catch (e: Exception) {
-            Log.e("ReservationRepository", "Error saving reservation: ${e.message}", e)
-            throw e
+                Result.success(Unit)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
         }
-    }
+
+        private suspend fun getAdminUserIdByPlace(placeId: String): String? {
+            return try {
+                val usersSnapshot = firestore.collection("users")
+                    .whereEqualTo("role", "admin") // Get only admin users
+                    .get()
+                    .await()
+
+                Log.d("getAdminUserIdByPlace", "Admin users found: ${usersSnapshot.size()}")
+
+                for (userDoc in usersSnapshot.documents) {
+                    val placesSnapshot = firestore.collection("users")
+                        .document(userDoc.id)
+                        .collection("places")
+                        .whereEqualTo("id", placeId)
+                        .get()
+                        .await()
+
+                    Log.d(
+                        "getAdminUserIdByPlace",
+                        "Places found for user ${userDoc.id}: ${placesSnapshot.size()}"
+                    )
+
+                    if (!placesSnapshot.isEmpty) {
+                        return userDoc.id
+                    }
+                }
+
+                null
+            } catch (e: Exception) {
+                Log.e("getAdminUserIdByPlace", "Error fetching admin user ID", e)
+                null
+            }
+        }
+
 
     override suspend fun cancelUnapprovedReservations(placeId: String) {
         val currentUserId = auth.currentUser?.uid ?: throw Exception("User not authenticated")
@@ -75,7 +92,11 @@ class ReservationRepositoryImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e("ReservationRepository", "Error cancelling unapproved reservations: ${e.message}", e)
+            Log.e(
+                "ReservationRepository",
+                "Error cancelling unapproved reservations: ${e.message}",
+                e
+            )
             throw e
         }
     }
