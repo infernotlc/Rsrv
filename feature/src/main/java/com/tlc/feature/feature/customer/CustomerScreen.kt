@@ -1,6 +1,7 @@
 package com.tlc.feature.feature.customer
 
 import android.annotation.SuppressLint
+import android.util.Base64
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,10 +38,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Timestamp
+import com.google.gson.Gson
 import com.tlc.domain.model.firebase.DesignItem
 import com.tlc.domain.model.firebase.Place
+import com.tlc.domain.model.firebase.Reservation
 import com.tlc.domain.utils.RootResult
 import com.tlc.feature.feature.customer.viewmodel.CustomerViewModel
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -52,6 +58,9 @@ fun CustomerScreen(
     val designState by viewModel.designState.collectAsState()
     var showDesignPreview by remember { mutableStateOf(false) }
     var selectedPlaceId by remember { mutableStateOf<String?>(null) }
+    var userId by remember { mutableStateOf<String?>(null) }
+
+
 
     LaunchedEffect(Unit) {
         Log.d("CustomerScreen", "LaunchedEffect triggered, fetching places")
@@ -61,7 +70,6 @@ fun CustomerScreen(
     Scaffold(
         content = {
             if (showDesignPreview) {
-                // Design preview UI
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -70,7 +78,10 @@ fun CustomerScreen(
                     Column {
                         IconButton(
                             onClick = {
-                                Log.d("CustomerScreen", "Back button clicked, closing design preview")
+                                Log.d(
+                                    "CustomerScreen",
+                                    "Back button clicked, closing design preview"
+                                )
                                 showDesignPreview = false
                             },
                             modifier = Modifier.padding(16.dp)
@@ -97,20 +108,23 @@ fun CustomerScreen(
                                 }
 
                                 is RootResult.Success -> {
-                                    val designItems = (designState.result as RootResult.Success<List<DesignItem>>).data ?: emptyList()
+                                    val designItems =
+                                        (designState.result as RootResult.Success<List<DesignItem>>).data
+                                            ?: emptyList()
                                     DesignPreview(
                                         designItems,
                                         onChairClick = { selectedChair ->
-                                            // Navigate to reservation screen with the placeId
                                             if (selectedPlaceId != null) {
-                                                navController.navigate("reservation_screen/${selectedPlaceId}/${selectedChair.designId}")
+                                                navController.navigate("save_reservation_screen/${userId}/${selectedPlaceId}/${selectedChair.designId}")
                                             }
                                         }
                                     )
                                 }
 
+
                                 is RootResult.Error -> {
-                                    val errorMessage = (designState.result as RootResult.Error).message
+                                    val errorMessage =
+                                        (designState.result as RootResult.Error).message
                                     Text(
                                         text = errorMessage ?: "Failed to load design",
                                         color = Color.Red,
@@ -124,7 +138,6 @@ fun CustomerScreen(
                     }
                 }
             } else {
-                // List places UI
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -139,7 +152,9 @@ fun CustomerScreen(
                         }
 
                         is RootResult.Success -> {
-                            val places = (placesState.result as RootResult.Success<List<Place>>).data ?: emptyList()
+                            val places =
+                                (placesState.result as RootResult.Success<List<Place>>).data
+                                    ?: emptyList()
                             LazyColumn {
                                 items(places) { place ->
                                     PlaceItem(
@@ -170,7 +185,6 @@ fun CustomerScreen(
         }
     )
 }
-
 
 
 @Composable
