@@ -52,6 +52,7 @@ firebasePerf = "21.0.1"
 googleFirebaseFirebasePerf = "1.4.2"
 uiGeometryAndroid = "1.6.8"
 foundationLayout = "1.0.1"
+lifecycleViewmodelKtx = "2.6.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -95,6 +96,7 @@ firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashly
 firebase-perf = { group = "com.google.firebase", name = "firebase-perf", version.ref = "firebasePerf" }
 androidx-ui-geometry-android = { group = "androidx.compose.ui", name = "ui-geometry-android", version.ref = "uiGeometryAndroid" }
 androidx-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
+androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
