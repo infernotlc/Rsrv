@@ -180,7 +180,7 @@ fun MainScreen(
                                 }
                             },
                             actions = {
-                                if (title == "Customer Screen" || title == "Admin Screen") {
+                                if (title == "Customer Screen" || title == "Admin Screen" || title == "Save Your Rsrv") {
                                     var expanded by remember { mutableStateOf(false) }
                                     IconButton(onClick = { expanded = !expanded }) {
                                         Icon(
@@ -214,6 +214,16 @@ fun MainScreen(
                                                     expanded = false
                                                     dialogAction = "Logout"
                                                     showDialog = true
+                                                }
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text("Settings", color = Color.Black) },
+                                                onClick = {
+                                                    expanded = false
+                                                    navController.navigate(NavigationGraph.SETTINGS_SCREEN.route)
+                                                    appBarTitle = "Settings"
+                                                    navigationKey++
+
                                                 }
                                             )
                                         }
