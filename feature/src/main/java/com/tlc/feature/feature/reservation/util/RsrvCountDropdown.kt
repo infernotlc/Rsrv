@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.tlc.feature.R
 
 @Composable
-fun ReservationCountDropdown(
+fun RsrvCountDropdown(
     selectedCount: Int?,
     onCountSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
