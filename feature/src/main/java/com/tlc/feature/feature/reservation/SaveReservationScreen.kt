@@ -1,16 +1,26 @@
 package com.tlc.feature.feature.reservation
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.util.Base64
+import android.widget.DatePicker
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,12 +43,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.google.firebase.Timestamp
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.tlc.domain.model.firebase.Reservation
+import com.tlc.feature.feature.reservation.util.DatePickerWithDialog
+import com.tlc.feature.feature.reservation.util.PetCountDropdown
+import com.tlc.feature.feature.reservation.util.PhoneNumber
+import com.tlc.feature.feature.reservation.util.ReservationCountDropdown
+import com.tlc.feature.feature.reservation.util.TimePicker
 import com.tlc.feature.feature.reservation.viewmodel.ReservationUiState
 import com.tlc.feature.feature.reservation.viewmodel.SaveReservationViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,9 +63,11 @@ fun SaveReservationScreen(
 ) {
     val viewModel: SaveReservationViewModel = hiltViewModel()
     var customerName by remember { mutableStateOf("") }
-    var customerEmail by remember { mutableStateOf("") }
+    var customerPhoneNo by remember { mutableStateOf("") } // Change to String
     var date by remember { mutableStateOf("") }
     var time by remember { mutableStateOf("") }
+    var selectedCount by remember { mutableStateOf<Int?>(null) }
+    var selectedAnimalCount by remember { mutableStateOf<Int?>(null) }
 
     Scaffold(
         topBar = {
@@ -58,7 +75,7 @@ fun SaveReservationScreen(
                 title = { Text("New Reservation") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -69,72 +86,91 @@ fun SaveReservationScreen(
                     .padding(padding)
                     .padding(16.dp)
             ) {
-                // Input Fields
                 OutlinedTextField(
                     value = customerName,
                     onValueChange = { customerName = it },
-                    label = { Text("Your Name") },
+                    label = { Text("Reservation Holder Name") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                OutlinedTextField(
-                    value = customerEmail,
-                    onValueChange = { customerEmail = it },
-                    label = { Text("Your Email") },
-                    modifier = Modifier.fillMaxWidth()
+                PhoneNumber(
+                    phoneNumber = customerPhoneNo,
+                    onPhoneNumberChange = { customerPhoneNo = it },
                 )
 
-                OutlinedTextField(
-                    value = date,
-                    onValueChange = { date = it },
-                    label = { Text("Date (YYYY-MM-DD)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    DatePickerWithDialog(
+                        modifier = Modifier.weight(1f),
+                        onDateSelected = { date = it }
+                    )
 
-                OutlinedTextField(
-                    value = time,
-                    onValueChange = { time = it },
-                    label = { Text("Time (HH:MM)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    ReservationCountDropdown(
+                        selectedCount = selectedCount,
+                        onCountSelected = { count -> selectedCount = count },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    PetCountDropdown(
+                        selectedCount = selectedAnimalCount,
+                        onCountSelected = { count -> selectedAnimalCount = count },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    TimePicker(
+                        onTimeSelected = { time = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Save Button
                 Button(
                     onClick = {
-                        if (customerName.isBlank() || customerEmail.isBlank() || date.isBlank() || time.isBlank()) {
+                       // if (customerName.isBlank() || customerPhoneNo.isBlank() || date.isBlank() || time.isBlank() || selectedCount == null) {
                             viewModel.updateUiState(ReservationUiState.Error("All fields are required"))
-                        } else {
+                        //} else {
+
                             val reservation = Reservation(
                                 chairId = chairId,
-                                customerId = customerEmail, // Use email as customer ID
+                                holderName = customerName,
+                                holderPhoneNo = customerPhoneNo,
+                                customerCount = selectedCount!!,
+                                animalCount = selectedAnimalCount ?: 0,
                                 date = date,
                                 time = time,
                                 isApproved = false,
                                 timestamp = Timestamp.now()
                             )
                             viewModel.saveReservation(placeId, listOf(reservation))
-                        }
+                    //    }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(Color.Black)
                 ) {
                     Text("Save Reservation")
                 }
 
-                // Show loading/error/success states
                 when (viewModel.uiState.value) {
                     is ReservationUiState.Loading -> {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
                     }
+
                     is ReservationUiState.Success -> {
                         val message = (viewModel.uiState.value as ReservationUiState.Success).message
                         Text(text = message, color = Color.Green)
                     }
+
                     is ReservationUiState.Error -> {
                         val message = (viewModel.uiState.value as ReservationUiState.Error).message
                         Text(text = message, color = Color.Red)
                     }
+
                     else -> {}
                 }
             }
