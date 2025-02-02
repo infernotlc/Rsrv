@@ -5,6 +5,7 @@ import android.os.Build
 import android.util.Base64
 import android.widget.DatePicker
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
@@ -92,63 +94,95 @@ fun SaveReservationScreen(
                     label = { Text("Reservation Holder Name") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                Column(
+                    modifier =
+                    Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    PhoneNumber(
+                        phoneNumber = customerPhoneNo,
+                        onPhoneNumberChange = { customerPhoneNo = it },
+                        modifier = Modifier
+                            .width(20.dp)
+                            .background(Color.White)
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
 
-                PhoneNumber(
-                    phoneNumber = customerPhoneNo,
-                    onPhoneNumberChange = { customerPhoneNo = it },
-                )
-
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.CenterHorizontally),
-                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    DatePickerWithDialog(
-                        modifier = Modifier.weight(1f),
-                        onDateSelected = { date = it }
-                    )
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                    ) {
+                        DatePickerWithDialog(
+                            modifier = Modifier.weight(1f),
+                            onDateSelected = { date = it }
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        TimePicker(
+                            onTimeSelected = { time = it },
+                            modifier = Modifier.weight(1f)
+                        )
 
-                    ReservationCountDropdown(
-                        selectedCount = selectedCount,
-                        onCountSelected = { count -> selectedCount = count },
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    PetCountDropdown(
-                        selectedCount = selectedAnimalCount,
-                        onCountSelected = { count -> selectedAnimalCount = count },
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    TimePicker(
-                        onTimeSelected = { time = it },
-                        modifier = Modifier.weight(1f)
-                    )
+                    }
                 }
+                Spacer(
+                    modifier = Modifier
+                        .height(16.dp)
+                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                    ) {
+                        ReservationCountDropdown(
+                            selectedCount = selectedCount,
+                            onCountSelected = { count -> selectedCount = count },
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        PetCountDropdown(
+                            selectedCount = selectedAnimalCount,
+                            onCountSelected = { count -> selectedAnimalCount = count },
+                            modifier = Modifier.weight(1f)
+                        )
+
+
+                    }
+                }
+
+
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Save Button
                 Button(
                     onClick = {
-                       // if (customerName.isBlank() || customerPhoneNo.isBlank() || date.isBlank() || time.isBlank() || selectedCount == null) {
-                            viewModel.updateUiState(ReservationUiState.Error("All fields are required"))
+                        // if (customerName.isBlank() || customerPhoneNo.isBlank() || date.isBlank() || time.isBlank() || selectedCount == null) {
+                        viewModel.updateUiState(ReservationUiState.Error("All fields are required"))
                         //} else {
 
-                            val reservation = Reservation(
-                                chairId = chairId,
-                                holderName = customerName,
-                                holderPhoneNo = customerPhoneNo,
-                                customerCount = selectedCount!!,
-                                animalCount = selectedAnimalCount ?: 0,
-                                date = date,
-                                time = time,
-                                isApproved = false,
-                                timestamp = Timestamp.now()
-                            )
-                            viewModel.saveReservation(placeId, listOf(reservation))
-                    //    }
+                        val reservation = Reservation(
+                            chairId = chairId,
+                            holderName = customerName,
+                            holderPhoneNo = customerPhoneNo,
+                            customerCount = selectedCount!!,
+                            animalCount = selectedAnimalCount ?: 0,
+                            date = date,
+                            time = time,
+                            isApproved = false,
+                            timestamp = Timestamp.now()
+                        )
+                        viewModel.saveReservation(placeId, listOf(reservation))
+                        //    }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(Color.Black)
@@ -162,7 +196,8 @@ fun SaveReservationScreen(
                     }
 
                     is ReservationUiState.Success -> {
-                        val message = (viewModel.uiState.value as ReservationUiState.Success).message
+                        val message =
+                            (viewModel.uiState.value as ReservationUiState.Success).message
                         Text(text = message, color = Color.Green)
                     }
 
