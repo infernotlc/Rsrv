@@ -79,7 +79,7 @@ fun TimePicker(
                     showAdvancedExample = true
                 }) {
                     Icon(
-                        painterResource(R.drawable.ic_lock),
+                        painterResource(R.drawable.baseline_access_time_24),
                         contentDescription = null
                     )
                 }
