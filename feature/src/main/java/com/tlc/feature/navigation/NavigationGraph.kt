@@ -13,7 +13,8 @@ enum class NavigationGraph(val route: String) {
     ADMIN_SCREEN("admin_screen"),
     DESIGN_SCREEN("design_screen/{placeData}"),
     CUSTOMER_SCREEN("customer_screen"),
-    SAVE_RESERVATION_SCREEN("save_reservation_screen/{placeId}/{chairId}");
+    SAVE_RESERVATION_SCREEN("save_reservation_screen/{userId}/{placeId}/{chairId}"),
+    SETTINGS_SCREEN("settings_screen");
 
     companion object {
         fun getDesignRoute(place: Place): String {
