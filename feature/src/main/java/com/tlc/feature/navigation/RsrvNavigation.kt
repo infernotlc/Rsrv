@@ -24,6 +24,7 @@ import com.tlc.feature.feature.component.LoadingLottie
 import com.tlc.feature.feature.customer.CustomerScreen
 import com.tlc.feature.feature.design.DesignScreen
 import com.tlc.feature.feature.reservation.SaveReservationScreen
+import com.tlc.feature.feature.settings.SettingsScreen
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -46,15 +47,13 @@ fun RsrvNavigation(
 
     if (mainViewModel.isLoading) {
         Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
         ) {
             LoadingLottie(resId = R.raw.loading_lottie)
         }
     } else {
         NavHost(
-            navController = navController,
-            startDestination = mainViewModel.startDestination
+            navController = navController, startDestination = mainViewModel.startDestination
         ) {
             composable(NavigationGraph.IS_LOGGED_IN.route) {
                 IsLoggedInScreen(navController)
@@ -92,32 +91,30 @@ fun RsrvNavigation(
                 val place = placeJson?.let { Gson().fromJson(it, Place::class.java) }
                 if (place != null) {
                     DesignScreen(
-                        navController = navController,
-                        place = place,
-                        placeId = place.id
+                        navController = navController, place = place, placeId = place.id
                     )
                 }
                 onTitleChange("Design Screen")
             }
-            composable("customer_screen") {
-                CustomerScreen(navController = navController)
-            }
-                composable(
-                    route = "save_reservation_screen/{userId}/{placeId}/{chairId}",
-                    arguments = listOf(
-                        navArgument("placeId") { type = NavType.StringType },
-                        navArgument("chairId") { type = NavType.StringType },
-                    )
-                ) { backStackEntry ->
-                    val placeId = backStackEntry.arguments?.getString("placeId") ?: ""
-                    val chairId = backStackEntry.arguments?.getString("chairId") ?: ""
+            composable(
+                route = NavigationGraph.SAVE_RESERVATION_SCREEN.route, arguments = listOf(
+                    navArgument("placeId") { type = NavType.StringType },
+                    navArgument("chairId") { type = NavType.StringType },
+                )
+            ) { backStackEntry ->
+                val placeId = backStackEntry.arguments?.getString("placeId") ?: ""
+                val chairId = backStackEntry.arguments?.getString("chairId") ?: ""
 
-                    SaveReservationScreen(
-                        navController = navController,
-                        placeId = placeId,
-                        chairId = chairId
-                    )
-                }
+                SaveReservationScreen(
+                    navController = navController, placeId = placeId, chairId = chairId
+                )
+                onTitleChange("Save Your Rsrv")
+            }
+
+            composable(NavigationGraph.SETTINGS_SCREEN.route) {
+                SettingsScreen(navController)
+                onTitleChange("Settings")
             }
         }
     }
+}
