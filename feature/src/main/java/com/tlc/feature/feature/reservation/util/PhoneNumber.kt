@@ -1,13 +1,11 @@
 package com.tlc.feature.feature.reservation.util
 
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
@@ -17,10 +15,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 @Composable
 fun PhoneNumber(
 phoneNumber:String,
-onPhoneNumberChange:(String)->Unit
+onPhoneNumberChange:(String)->Unit,
+modifier: Modifier = Modifier
 ) {
     val numericRegex = Regex("[^0-9]")
-    TextField(
+    OutlinedTextField(
         value = phoneNumber,
         onValueChange = {
             // Remove non-numeric characters.
