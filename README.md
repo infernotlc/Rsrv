@@ -53,4 +53,5 @@ Core Module: Common utilities and shared components (UI elements, theme, etc.).
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/ad6c57af-644b-4680-9ff6-c62b5301b32b" width="300">
+   <img src="https://github.com/user-attachments/assets/73920a5d-e37f-4fe3-9a31-5c055eee7a55" width="300">
 </p>
