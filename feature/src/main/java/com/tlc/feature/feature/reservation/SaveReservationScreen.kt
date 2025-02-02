@@ -11,14 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -39,7 +35,7 @@ import com.tlc.domain.model.firebase.Reservation
 import com.tlc.feature.feature.reservation.util.DatePickerWithDialog
 import com.tlc.feature.feature.reservation.util.PetCountDropdown
 import com.tlc.feature.feature.reservation.util.PhoneNumber
-import com.tlc.feature.feature.reservation.util.ReservationCountDropdown
+import com.tlc.feature.feature.reservation.util.RsrvCountDropdown
 import com.tlc.feature.feature.reservation.util.TimePicker
 import com.tlc.feature.feature.reservation.viewmodel.ReservationUiState
 import com.tlc.feature.feature.reservation.viewmodel.SaveReservationViewModel
@@ -62,16 +58,6 @@ fun SaveReservationScreen(
     var selectedAnimalCount by remember { mutableStateOf<Int?>(null) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("New Reservation") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        },
         content = { padding ->
             Column(
                 modifier = Modifier
@@ -81,7 +67,7 @@ fun SaveReservationScreen(
                 OutlinedTextField(
                     value = customerName,
                     onValueChange = { customerName = it },
-                    label = { Text("Reservation Holder Name") },
+                    label = { Text("Rsrv Holder Name") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Column(
@@ -132,7 +118,7 @@ fun SaveReservationScreen(
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                     ) {
-                        ReservationCountDropdown(
+                        RsrvCountDropdown(
                             selectedCount = selectedCount,
                             onCountSelected = { count -> selectedCount = count },
                             modifier = Modifier.weight(1f)
