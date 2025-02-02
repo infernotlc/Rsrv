@@ -58,7 +58,7 @@ fun CustomerScreen(
     val designState by viewModel.designState.collectAsState()
     var showDesignPreview by remember { mutableStateOf(false) }
     var selectedPlaceId by remember { mutableStateOf<String?>(null) }
-    var userId by remember { mutableStateOf<String?>(null) }
+    val userId by remember { mutableStateOf<String?>(null) }
 
 
 
@@ -76,22 +76,22 @@ fun CustomerScreen(
                         .background(Color.White)
                 ) {
                     Column {
-                        IconButton(
-                            onClick = {
-                                Log.d(
-                                    "CustomerScreen",
-                                    "Back button clicked, closing design preview"
-                                )
-                                showDesignPreview = false
-                            },
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.Black
-                            )
-                        }
+//                        IconButton(
+//                            onClick = {
+//                                Log.d(
+//                                    "CustomerScreen",
+//                                    "Back button clicked, closing design preview"
+//                                )
+//                                showDesignPreview = false
+//                            },
+//                            modifier = Modifier.padding(16.dp)
+//                        ) {
+//                            Icon(
+//                                imageVector = Icons.Default.ArrowBack,
+//                                contentDescription = "Back",
+//                                tint = Color.Black
+//                            )
+//                        }
 
                         Box(
                             modifier = Modifier
@@ -210,7 +210,7 @@ fun DesignPreview(
     designItems: List<DesignItem>,
     onChairClick: (DesignItem) -> Unit = {}
 ) {
-    val density = LocalDensity.current.density  // Get screen density for scaling
+    val density = LocalDensity.current.density
     val navController = rememberNavController()
 
     Box(
