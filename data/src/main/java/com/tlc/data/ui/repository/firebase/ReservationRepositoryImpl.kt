@@ -34,6 +34,24 @@ class ReservationRepositoryImpl @Inject constructor(
                 Result.failure(e)
             }
         }
+    override suspend fun getReservations(placeId: String): List<Reservation> {
+        return try {
+            val adminUserId = getAdminUserIdByPlace(placeId) ?: return emptyList()
+
+            val reservationRef = firestore.collection("users")
+                .document(adminUserId)
+                .collection("places")
+                .document(placeId)
+                .collection("reservations")
+
+            val snapshot = reservationRef.get().await()
+
+            snapshot.documents.mapNotNull { it.toObject(Reservation::class.java) }
+        } catch (e: Exception) {
+            Log.e("ReservationRepository", "Error fetching reservations", e)
+            emptyList()
+        }
+    }
 
         private suspend fun getAdminUserIdByPlace(placeId: String): String? {
             return try {
