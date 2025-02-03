@@ -100,13 +100,15 @@ fun RsrvNavigation(
                 route = NavigationGraph.SAVE_RESERVATION_SCREEN.route, arguments = listOf(
                     navArgument("placeId") { type = NavType.StringType },
                     navArgument("chairId") { type = NavType.StringType },
+                    navArgument("userId") { type = NavType.StringType }
                 )
             ) { backStackEntry ->
                 val placeId = backStackEntry.arguments?.getString("placeId") ?: ""
-                val chairId = backStackEntry.arguments?.getString("chairId") ?: ""
+                val tableId = backStackEntry.arguments?.getString("tableId") ?: ""
+                val userId = backStackEntry.arguments?.getString("userId") ?: ""
 
                 SaveReservationScreen(
-                    navController = navController, placeId = placeId, chairId = chairId
+                    navController = navController,userId = userId, placeId = placeId, tableId = tableId
                 )
                 onTitleChange("Save Your Rsrv")
             }
