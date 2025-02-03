@@ -46,7 +46,6 @@ import com.tlc.feature.feature.reservation.viewmodel.SaveReservationViewModel
 @Composable
 fun SaveReservationScreen(
     navController: NavHostController,
-    userId: String,
     placeId: String,
     tableId: String
 ) {
