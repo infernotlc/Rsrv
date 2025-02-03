@@ -1,7 +1,6 @@
 package com.tlc.feature.feature.customer
 
 import android.annotation.SuppressLint
-import android.util.Base64
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,12 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,6 +51,7 @@ fun CustomerScreen(
 ) {
     val placesState by viewModel.placeState.collectAsState()
     val designState by viewModel.designState.collectAsState()
+    val reservationsState by viewModel.reservationsState.collectAsState()
     var showDesignPreview by remember { mutableStateOf(false) }
     var selectedPlaceId by remember { mutableStateOf<String?>(null) }
     val userId by remember { mutableStateOf<String?>(null) }
@@ -113,11 +109,13 @@ fun CustomerScreen(
                                             ?: emptyList()
                                     DesignPreview(
                                         designItems,
-                                        onChairClick = { selectedChair ->
+                                        onTableClick = { selectedTable ->
                                             if (selectedPlaceId != null) {
-                                                navController.navigate("save_reservation_screen/${userId}/${selectedPlaceId}/${selectedChair.designId}")
+                                                navController.navigate("save_reservation_screen/${userId}/${selectedPlaceId}/${selectedTable.designId}")
                                             }
-                                        }
+                                        },
+                                        reservations = reservationsState
+
                                     )
                                 }
 
@@ -208,10 +206,13 @@ fun PlaceItem(place: Place, onClick: () -> Unit) {
 @Composable
 fun DesignPreview(
     designItems: List<DesignItem>,
-    onChairClick: (DesignItem) -> Unit = {}
+    reservations: List<Reservation>,  // Pass the list of reservations
+    onTableClick: (DesignItem) -> Unit = {}
 ) {
     val density = LocalDensity.current.density
-    val navController = rememberNavController()
+
+    val reservedTableIds = reservations.filter { it.isReserved }.map { it.tableId }
+    val availableDesignItems = designItems.filter { it.designId !in reservedTableIds }  // Remove reserved tables
 
     Box(
         modifier = Modifier
@@ -220,14 +221,14 @@ fun DesignPreview(
             .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
-        if (designItems.isEmpty()) {
+        if (availableDesignItems.isEmpty()) {
             Text(
-                text = "No Design Available",
+                text = "No Available Tables",
                 color = Color.Black
             )
         } else {
             Box(modifier = Modifier.fillMaxSize()) {
-                designItems.forEach { item ->
+                availableDesignItems.forEach { item ->
                     when (item.type) {
                         "TABLE" -> {
                             Box(
@@ -238,6 +239,9 @@ fun DesignPreview(
                                     )
                                     .size(30.dp)
                                     .background(Color.Red)
+                                    .clickable {
+                                        onTableClick(item)
+                                    }
                             )
                         }
 
@@ -250,9 +254,6 @@ fun DesignPreview(
                                     )
                                     .size(20.dp)
                                     .background(Color.Black)
-                                    .clickable {
-                                        onChairClick(item)  // Update the selected chair state in the view model
-                                    }
                             )
                         }
                     }
