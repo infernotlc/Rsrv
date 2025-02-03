@@ -46,8 +46,9 @@ import com.tlc.feature.feature.reservation.viewmodel.SaveReservationViewModel
 @Composable
 fun SaveReservationScreen(
     navController: NavHostController,
+    userId: String,
     placeId: String,
-    chairId: String
+    tableId: String
 ) {
     val viewModel: SaveReservationViewModel = hiltViewModel()
     var customerName by remember { mutableStateOf("") }
@@ -147,7 +148,7 @@ fun SaveReservationScreen(
                         //} else {
 
                         val reservation = Reservation(
-                            chairId = chairId,
+                            tableId = tableId,
                             holderName = customerName,
                             holderPhoneNo = customerPhoneNo,
                             customerCount = selectedCount!!,
