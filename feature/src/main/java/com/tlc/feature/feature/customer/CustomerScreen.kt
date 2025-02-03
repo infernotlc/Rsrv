@@ -158,6 +158,7 @@ import java.nio.charset.StandardCharsets
                                             onClick = {
                                                 selectedPlaceId = place.id
                                                 viewModel.fetchDesign(place.id)
+                                                viewModel.fetchReservations(place.id)
                                                 showDesignPreview = true
                                             }
                                         )
@@ -201,62 +202,84 @@ import java.nio.charset.StandardCharsets
     }
 
 
-    @Composable
-    fun DesignPreview(
-        designItems: List<DesignItem>,
-        reservations: List<Reservation>,  // Pass the list of reservations
-        onTableClick: (DesignItem) -> Unit = {}
+@Composable
+fun DesignPreview(
+    designItems: List<DesignItem>,
+    reservations: List<Reservation>,
+    onTableClick: (DesignItem) -> Unit = {}
+) {
+    val density = LocalDensity.current.density
+
+    // Get a list of reserved table IDs from the reservations
+    val reservedTableIds = reservations.filter { it.isReserved }.map { it.tableId }
+
+    // Log reserved table IDs
+    Log.d("DesignPreview", "Reserved Table IDs: $reservedTableIds")
+
+    // Filter out design items (tables) that are reserved
+    val availableDesignItems = designItems.filter { it.designId !in reservedTableIds }
+
+    // Log available design items
+    Log.d("DesignPreview", "Available Design Items: ${availableDesignItems.size}")
+    availableDesignItems.forEach { item ->
+        Log.d("DesignPreview", "Available Design Item: ${item.designId}, Type: ${item.type}")
+    }
+    // Log the reservations and their 'isReserved' field
+    Log.d("DesignPreview", "Reservations: ${reservations.size}")
+    reservations.forEach { reservation ->
+        Log.d("DesignPreview", "TableId: ${reservation.tableId}, isReserved: ${reservation.isReserved}")
+    }
+// Check if tableId and designId match correctly
+    Log.d("DesignPreview", "Reserved Table IDs: $reservedTableIds")
+    availableDesignItems.forEach { item ->
+        Log.d("DesignPreview", "Design Item ID: ${item.designId}, Type: ${item.type}")
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(600.dp)
+            .background(Color.White),
+        contentAlignment = Alignment.Center
     ) {
-        val density = LocalDensity.current.density
+        if (availableDesignItems.isEmpty()) {
+            Text(
+                text = "No Available Tables",
+                color = Color.Black
+            )
+        } else {
+            Box(modifier = Modifier.fillMaxSize()) {
+                availableDesignItems.forEach { item ->
+                    when (item.type) {
+                        "TABLE" -> {
+                            Box(
+                                modifier = Modifier
+                                    .offset(
+                                        (item.xPosition / density).dp,
+                                        (item.yPosition / density).dp
+                                    )
+                                    .size(30.dp)
+                                    .background(Color.Red)
+                                    .clickable {
+                                        onTableClick(item)
+                                    }
+                            )
+                        }
 
-        val reservedTableIds = reservations.filter { it.isReserved }.map { it.tableId }
-        val availableDesignItems = designItems.filter { it.designId !in reservedTableIds }  // Remove reserved tables
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(600.dp)
-                .background(Color.White),
-            contentAlignment = Alignment.Center
-        ) {
-            if (availableDesignItems.isEmpty()) {
-                Text(
-                    text = "No Available Tables",
-                    color = Color.Black
-                )
-            } else {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    availableDesignItems.forEach { item ->
-                        when (item.type) {
-                            "TABLE" -> {
-                                Box(
-                                    modifier = Modifier
-                                        .offset(
-                                            (item.xPosition / density).dp,
-                                            (item.yPosition / density).dp
-                                        )
-                                        .size(30.dp)
-                                        .background(Color.Red)
-                                        .clickable {
-                                            onTableClick(item)
-                                        }
-                                )
-                            }
-
-                            "CHAIR" -> {
-                                Box(
-                                    modifier = Modifier
-                                        .offset(
-                                            (item.xPosition / density).dp,
-                                            (item.yPosition / density).dp
-                                        )
-                                        .size(20.dp)
-                                        .background(Color.Black)
-                                )
-                            }
+                        "CHAIR" -> {
+                            Box(
+                                modifier = Modifier
+                                    .offset(
+                                        (item.xPosition / density).dp,
+                                        (item.yPosition / density).dp
+                                    )
+                                    .size(20.dp)
+                                    .background(Color.Black)
+                            )
                         }
                     }
                 }
             }
         }
     }
+}
