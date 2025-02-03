@@ -54,6 +54,14 @@ import java.nio.charset.StandardCharsets
         val reservationsState by viewModel.reservationsState.collectAsState()
         var showDesignPreview by remember { mutableStateOf(false) }
         var selectedPlaceId by remember { mutableStateOf<String?>(null) }
+fun CustomerScreen(
+    navController: NavHostController,
+    viewModel: CustomerViewModel = hiltViewModel(),
+) {
+    val placesState by viewModel.placeState.collectAsState()
+    val designState by viewModel.designState.collectAsState()
+    var showDesignPreview by remember { mutableStateOf(false) }
+    var selectedPlaceId by remember { mutableStateOf<String?>(null) }
 
 
         LaunchedEffect(Unit) {
@@ -116,6 +124,20 @@ import java.nio.charset.StandardCharsets
 
                                         )
                                     }
+
+                                is RootResult.Success -> {
+                                    val designItems =
+                                        (designState.result as RootResult.Success<List<DesignItem>>).data
+                                            ?: emptyList()
+                                    DesignPreview(
+                                        designItems,
+                                        onChairClick = { selectedChair ->
+                                            if (selectedPlaceId != null) {
+                                                navController.navigate("save_reservation_screen/${selectedPlaceId}/${selectedChair.designId}")
+                                            }
+                                        }
+                                    )
+                                }
 
 
                                     is RootResult.Error -> {
