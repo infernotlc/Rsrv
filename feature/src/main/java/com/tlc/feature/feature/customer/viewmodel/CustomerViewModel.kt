@@ -54,6 +54,7 @@ class CustomerViewModel @Inject constructor(
                 _designState.value = DesignState(isLoading = false, result = result)
             }
         }
+    }
          fun fetchReservations(placeId: String) {
             viewModelScope.launch {
                 val reservations = reservationRepository.getReservations(placeId)
@@ -61,4 +62,4 @@ class CustomerViewModel @Inject constructor(
             }
         }
     }
-}
+
