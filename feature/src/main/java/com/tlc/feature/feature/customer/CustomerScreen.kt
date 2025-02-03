@@ -115,7 +115,7 @@ fun CustomerScreen(
                                         designItems,
                                         onChairClick = { selectedChair ->
                                             if (selectedPlaceId != null) {
-                                                navController.navigate("save_reservation_screen/${userId}/${selectedPlaceId}/${selectedChair.designId}")
+                                                navController.navigate("save_reservation_screen/${selectedPlaceId}/${selectedChair.designId}")
                                             }
                                         }
                                     )
