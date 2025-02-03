@@ -99,7 +99,7 @@ fun RsrvNavigation(
             composable(
                 route = NavigationGraph.SAVE_RESERVATION_SCREEN.route, arguments = listOf(
                     navArgument("placeId") { type = NavType.StringType },
-                    navArgument("chairId") { type = NavType.StringType },
+                    navArgument("tableId") { type = NavType.StringType },
                 )
             ) { backStackEntry ->
                 val placeId = backStackEntry.arguments?.getString("placeId") ?: ""
