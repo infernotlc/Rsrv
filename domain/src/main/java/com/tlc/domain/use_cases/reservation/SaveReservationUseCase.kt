@@ -1,6 +1,5 @@
 package com.tlc.domain.use_cases.reservation
 
-import com.google.firebase.Timestamp
 import com.tlc.domain.model.firebase.Reservation
 import com.tlc.domain.repository.firebase.ReservationRepository
 import javax.inject.Inject
