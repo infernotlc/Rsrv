@@ -58,7 +58,6 @@ fun CustomerScreen(
     val designState by viewModel.designState.collectAsState()
     var showDesignPreview by remember { mutableStateOf(false) }
     var selectedPlaceId by remember { mutableStateOf<String?>(null) }
-    val userId by remember { mutableStateOf<String?>(null) }
 
 
 
