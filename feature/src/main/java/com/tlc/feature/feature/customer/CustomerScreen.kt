@@ -213,27 +213,15 @@ fun DesignPreview(
     // Get a list of reserved table IDs from the reservations
     val reservedTableIds = reservations.filter { it.isReserved }.map { it.tableId }
 
-    // Log reserved table IDs
+// Get a list of available table IDs (not reserved)
+
+// Log reserved and available table IDs
     Log.d("DesignPreview", "Reserved Table IDs: $reservedTableIds")
 
-    // Filter out design items (tables) that are reserved
-    val availableDesignItems = designItems.filter { it.designId !in reservedTableIds }
 
-    // Log available design items
-    Log.d("DesignPreview", "Available Design Items: ${availableDesignItems.size}")
-    availableDesignItems.forEach { item ->
-        Log.d("DesignPreview", "Available Design Item: ${item.designId}, Type: ${item.type}")
-    }
-    // Log the reservations and their 'isReserved' field
-    Log.d("DesignPreview", "Reservations: ${reservations.size}")
-    reservations.forEach { reservation ->
-        Log.d("DesignPreview", "TableId: ${reservation.tableId}, isReserved: ${reservation.isReserved}")
-    }
-// Check if tableId and designId match correctly
-    Log.d("DesignPreview", "Reserved Table IDs: $reservedTableIds")
-    availableDesignItems.forEach { item ->
-        Log.d("DesignPreview", "Design Item ID: ${item.designId}, Type: ${item.type}")
-    }
+// Instead of filtering out reserved tables, ensure only available ones are selectable
+    // If there are no reservations, show all tables
+    val availableDesignItems = designItems.filter { it.type == "TABLE" && it.designId !in reservedTableIds }
 
     Box(
         modifier = Modifier
@@ -250,34 +238,20 @@ fun DesignPreview(
         } else {
             Box(modifier = Modifier.fillMaxSize()) {
                 availableDesignItems.forEach { item ->
-                    when (item.type) {
-                        "TABLE" -> {
-                            Box(
-                                modifier = Modifier
-                                    .offset(
-                                        (item.xPosition / density).dp,
-                                        (item.yPosition / density).dp
-                                    )
-                                    .size(30.dp)
-                                    .background(Color.Red)
-                                    .clickable {
-                                        onTableClick(item)
-                                    }
+                    // Show available tables (those that are not reserved)
+                    Box(
+                        modifier = Modifier
+                            .offset(
+                                (item.xPosition / density).dp,
+                                (item.yPosition / density).dp
                             )
-                        }
+                            .size(30.dp)
+                            .background(Color.Red)
+                            .clickable {
+                                onTableClick(item)
+                            }
 
-                        "CHAIR" -> {
-                            Box(
-                                modifier = Modifier
-                                    .offset(
-                                        (item.xPosition / density).dp,
-                                        (item.yPosition / density).dp
-                                    )
-                                    .size(20.dp)
-                                    .background(Color.Black)
-                            )
-                        }
-                    }
+                    )
                 }
             }
         }
