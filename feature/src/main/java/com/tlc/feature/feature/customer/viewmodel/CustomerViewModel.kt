@@ -55,11 +55,15 @@ class CustomerViewModel @Inject constructor(
             }
         }
     }
-         fun fetchReservations(placeId: String) {
-            viewModelScope.launch {
-                val reservations = reservationRepository.getReservations(placeId)
-                _reservationsState.value = reservations
+
+    fun fetchReservations(placeId: String) {
+        viewModelScope.launch {
+            reservationRepository.getReservations(placeId) { updatedReservations ->
+                _reservationsState.value = updatedReservations
             }
         }
     }
+
+}
+
 
