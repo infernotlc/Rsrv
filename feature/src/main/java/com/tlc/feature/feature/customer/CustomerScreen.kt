@@ -45,85 +45,61 @@ import java.nio.charset.StandardCharsets
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-    fun CustomerScreen(
-        navController: NavHostController,
-        viewModel: CustomerViewModel = hiltViewModel(),
-    ) {
-        val placesState by viewModel.placeState.collectAsState()
-        val designState by viewModel.designState.collectAsState()
-        val reservationsState by viewModel.reservationsState.collectAsState()
-        var showDesignPreview by remember { mutableStateOf(false) }
-        var selectedPlaceId by remember { mutableStateOf<String?>(null) }
 fun CustomerScreen(
     navController: NavHostController,
     viewModel: CustomerViewModel = hiltViewModel(),
 ) {
     val placesState by viewModel.placeState.collectAsState()
     val designState by viewModel.designState.collectAsState()
+    val reservationsState by viewModel.reservationsState.collectAsState()
     var showDesignPreview by remember { mutableStateOf(false) }
     var selectedPlaceId by remember { mutableStateOf<String?>(null) }
 
 
-        LaunchedEffect(Unit) {
-            Log.d("CustomerScreen", "LaunchedEffect triggered, fetching places")
-            viewModel.fetchPlaces()
-        }
+    LaunchedEffect(Unit) {
+        Log.d("CustomerScreen", "LaunchedEffect triggered, fetching places")
+        viewModel.fetchPlaces()
+    }
 
-        Scaffold(
-            content = {
-                if (showDesignPreview) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.White)
-                    ) {
-                        Column {
-    //                        IconButton(
-    //                            onClick = {
-    //                                Log.d(
-    //                                    "CustomerScreen",
-    //                                    "Back button clicked, closing design preview"
-    //                                )
-    //                                showDesignPreview = false
-    //                            },
-    //                            modifier = Modifier.padding(16.dp)
-    //                        ) {
-    //                            Icon(
-    //                                imageVector = Icons.Default.ArrowBack,
-    //                                contentDescription = "Back",
-    //                                tint = Color.Black
-    //                            )
-    //                        }
+    Scaffold(
+        content = {
+            if (showDesignPreview) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White)
+                ) {
+                    Column {
+                        //                        IconButton(
+                        //                            onClick = {
+                        //                                Log.d(
+                        //                                    "CustomerScreen",
+                        //                                    "Back button clicked, closing design preview"
+                        //                                )
+                        //                                showDesignPreview = false
+                        //                            },
+                        //                            modifier = Modifier.padding(16.dp)
+                        //                        ) {
+                        //                            Icon(
+                        //                                imageVector = Icons.Default.ArrowBack,
+                        //                                contentDescription = "Back",
+                        //                                tint = Color.Black
+                        //                            )
+                        //                        }
 
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(Color.White),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                when (designState.result) {
-                                    is RootResult.Loading -> {
-                                        CircularProgressIndicator(
-                                            color = Color.Black,
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
-                                    }
-
-                                    is RootResult.Success -> {
-                                        val designItems =
-                                            (designState.result as RootResult.Success<List<DesignItem>>).data
-                                                ?: emptyList()
-                                        DesignPreview(
-                                            designItems,
-                                            onTableClick = { selectedTable ->
-                                                if (selectedPlaceId != null) {
-                                                    navController.navigate("save_reservation_screen/${selectedPlaceId}/${selectedTable.designId}")
-                                                }
-                                            },
-                                            reservations = reservationsState
-
-                                        )
-                                    }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.White),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            when (designState.result) {
+                                is RootResult.Loading -> {
+                                    CircularProgressIndicator(
+                                        color = Color.Black,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
 
                                 is RootResult.Success -> {
                                     val designItems =
@@ -131,97 +107,99 @@ fun CustomerScreen(
                                             ?: emptyList()
                                     DesignPreview(
                                         designItems,
-                                        onChairClick = { selectedChair ->
+                                        onTableClick = { selectedTable ->
                                             if (selectedPlaceId != null) {
-                                                navController.navigate("save_reservation_screen/${selectedPlaceId}/${selectedChair.designId}")
+                                                navController.navigate("save_reservation_screen/${selectedPlaceId}/${selectedTable.designId}")
                                             }
-                                        }
+                                        },
+                                        reservations = reservationsState
+
                                     )
                                 }
 
 
-                                    is RootResult.Error -> {
-                                        val errorMessage =
-                                            (designState.result as RootResult.Error).message
-                                        Text(
-                                            text = errorMessage ?: "Failed to load design",
-                                            color = Color.Red,
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
-                                    }
-
-                                    else -> {}
+                                is RootResult.Error -> {
+                                    val errorMessage =
+                                        (designState.result as RootResult.Error).message
+                                    Text(
+                                        text = errorMessage ?: "Failed to load design",
+                                        color = Color.Red,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
                                 }
-                            }
-                        }
-                    }
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black)
-                    ) {
-                        when (placesState.result) {
-                            is RootResult.Loading -> {
-                                CircularProgressIndicator(
-                                    color = Color.Black,
-                                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                                )
-                            }
 
-                            is RootResult.Success -> {
-                                val places =
-                                    (placesState.result as RootResult.Success<List<Place>>).data
-                                        ?: emptyList()
-                                LazyColumn {
-                                    items(places) { place ->
-                                        PlaceItem(
-                                            place = place,
-                                            onClick = {
-                                                selectedPlaceId = place.id
-                                                viewModel.fetchDesign(place.id)
-                                                viewModel.fetchReservations(place.id)
-                                                showDesignPreview = true
-                                            }
-                                        )
-                                    }
-                                }
+                                else -> {}
                             }
-
-                            is RootResult.Error -> {
-                                val errorMessage = (placesState.result as RootResult.Error).message
-                                Text(
-                                    text = errorMessage,
-                                    color = Color.Red,
-                                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                                )
-                            }
-
-                            else -> {}
                         }
                     }
                 }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black)
+                ) {
+                    when (placesState.result) {
+                        is RootResult.Loading -> {
+                            CircularProgressIndicator(
+                                color = Color.Black,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                        }
+
+                        is RootResult.Success -> {
+                            val places =
+                                (placesState.result as RootResult.Success<List<Place>>).data
+                                    ?: emptyList()
+                            LazyColumn {
+                                items(places) { place ->
+                                    PlaceItem(
+                                        place = place,
+                                        onClick = {
+                                            selectedPlaceId = place.id
+                                            viewModel.fetchDesign(place.id)
+                                            viewModel.fetchReservations(place.id)
+                                            showDesignPreview = true
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        is RootResult.Error -> {
+                            val errorMessage = (placesState.result as RootResult.Error).message
+                            Text(
+                                text = errorMessage,
+                                color = Color.Red,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                        }
+
+                        else -> {}
+                    }
+                }
             }
+        }
+    )
+}
+
+
+@Composable
+fun PlaceItem(place: Place, onClick: () -> Unit) {
+    Log.d("PlaceItem", "Displaying place: ${place.name}, ID: ${place.id}")
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clickable(onClick = onClick),
+    ) {
+        Text(
+            text = place.name,
+            modifier = Modifier.padding(16.dp),
+            color = Color.Black
         )
     }
-
-
-    @Composable
-    fun PlaceItem(place: Place, onClick: () -> Unit) {
-        Log.d("PlaceItem", "Displaying place: ${place.name}, ID: ${place.id}")
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-                .clickable(onClick = onClick),
-        ) {
-            Text(
-                text = place.name,
-                modifier = Modifier.padding(16.dp),
-                color = Color.Black
-            )
-        }
-    }
+}
 
 
 @Composable
