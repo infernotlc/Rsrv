@@ -3,6 +3,8 @@ package com.tlc.feature.feature.customer.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tlc.domain.model.firebase.Reservation
+import com.tlc.domain.repository.firebase.ReservationRepository
 import com.tlc.domain.use_cases.customer.GetCustomerPlacesUseCase
 import com.tlc.domain.use_cases.customer.LoadCustomerDesignUseCase
 import com.tlc.domain.utils.RootResult
@@ -19,7 +21,8 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class CustomerViewModel @Inject constructor(
     private val getCustomerPlacesUseCase: GetCustomerPlacesUseCase,
-    private val loadCustomerDesignUseCase: LoadCustomerDesignUseCase
+    private val loadCustomerDesignUseCase: LoadCustomerDesignUseCase,
+    private val reservationRepository: ReservationRepository
 ) : ViewModel() {
 
     private val _placeState = MutableStateFlow(GetAllState())
@@ -27,6 +30,9 @@ class CustomerViewModel @Inject constructor(
 
     private val _designState = MutableStateFlow(DesignState())
     val designState: StateFlow<DesignState> = _designState.asStateFlow()
+
+    private val _reservationsState = MutableStateFlow<List<Reservation>>(emptyList())
+    val reservationsState: StateFlow<List<Reservation>> = _reservationsState.asStateFlow()
 
     fun fetchPlaces() {
         Log.d("CustomerViewModel", "Fetching places...")
@@ -49,4 +55,11 @@ class CustomerViewModel @Inject constructor(
             }
         }
     }
-}
+         fun fetchReservations(placeId: String) {
+            viewModelScope.launch {
+                val reservations = reservationRepository.getReservations(placeId)
+                _reservationsState.value = reservations
+            }
+        }
+    }
+
