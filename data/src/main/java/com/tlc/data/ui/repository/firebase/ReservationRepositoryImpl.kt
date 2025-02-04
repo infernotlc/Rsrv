@@ -34,37 +34,43 @@ class ReservationRepositoryImpl @Inject constructor(
                 Result.failure(e)
             }
         }
-    override suspend fun getReservations(placeId: String): List<Reservation> {
-        return try {
-            val adminUserId = getAdminUserIdByPlace(placeId) ?: return emptyList()
-            Log.d("ReservationRepository", "Admin User ID: $adminUserId")
 
+    override suspend fun getReservations(placeId: String, onReservationsUpdated: (List<Reservation>) -> Unit) {
+        try {
+            val adminUserId = getAdminUserIdByPlace(placeId) ?: return
             val reservationRef = firestore.collection("users")
                 .document(adminUserId)
                 .collection("places")
                 .document(placeId)
                 .collection("reservations")
 
-            val snapshot = reservationRef.get().await()
+            reservationRef.addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Log.e("ReservationRepository", "Error listening for reservation changes", e)
+                    return@addSnapshotListener
+                }
 
-            if (snapshot.isEmpty) {
-                Log.d("ReservationRepository", "No reservations found for placeId: $placeId")
-                return emptyList()
-            }
+                if (snapshot == null) {
+                    Log.e("ReservationRepository", "Snapshot is null")
+                    return@addSnapshotListener
+                }
 
-            snapshot.documents.mapNotNull { document ->
-                val reservation = document.toObject(Reservation::class.java)
-                Log.d("ReservationRepository", "Reservation: $reservation")
-                reservation
+                Log.d("ReservationRepository", "Snapshot size: ${snapshot.size()}")
+
+                val reservations = snapshot.documents.mapNotNull { it.toObject(Reservation::class.java) }
+                Log.d("ReservationRepository", "Updated Reservations: $reservations")
+
+                onReservationsUpdated(reservations) // Update ViewModel
             }
         } catch (e: Exception) {
             Log.e("ReservationRepository", "Error fetching reservations", e)
-            return emptyList()
         }
-
     }
 
-        private suspend fun getAdminUserIdByPlace(placeId: String): String? {
+
+
+
+    private suspend fun getAdminUserIdByPlace(placeId: String): String? {
             return try {
                 val usersSnapshot = firestore.collection("users")
                     .whereEqualTo("role", "admin") // Get only admin users

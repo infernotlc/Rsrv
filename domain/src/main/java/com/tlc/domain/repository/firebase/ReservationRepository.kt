@@ -8,7 +8,7 @@ interface ReservationRepository {
         reservations: List<Reservation>
     ): Result<Unit>
 
-    suspend fun getReservations(placeId: String): List<Reservation>
+    suspend fun getReservations(placeId: String, onReservationsUpdated: (List<Reservation>) -> Unit)
 
     suspend fun cancelUnapprovedReservations(placeId: String)
 
