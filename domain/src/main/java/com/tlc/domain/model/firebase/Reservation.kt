@@ -2,6 +2,8 @@ package com.tlc.domain.model.firebase
 
 import com.google.firebase.Timestamp
 
+import com.google.firebase.firestore.PropertyName
+
 data class Reservation(
     val tableId: String = "",
     val holderName: String = "",
@@ -10,8 +12,12 @@ data class Reservation(
     val animalCount: Int = 0,
     val date: String = "",
     val time: String = "",
-    val isReserved: Boolean = true,
-    val isApproved: Boolean = false,
-    val timestamp: Timestamp = Timestamp.now()
 
+    @get:PropertyName("reserved") @set:PropertyName("reserved")
+    var isReserved: Boolean = false,
+
+    @get:PropertyName("approved") @set:PropertyName("approved")
+    var isApproved: Boolean = false,
+
+    val timestamp: Timestamp? = null
 )
