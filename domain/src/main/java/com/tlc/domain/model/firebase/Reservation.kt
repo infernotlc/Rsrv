@@ -12,7 +12,7 @@ data class Reservation(
     val animalCount: Int = 0,
     val date: String = "",
     val time: String = "",
-
+// or use @field:JvmField  instead of those ones
     @get:PropertyName("reserved") @set:PropertyName("reserved")
     var isReserved: Boolean = false,
 
