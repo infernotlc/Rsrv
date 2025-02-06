@@ -378,10 +378,10 @@ fun PlacesCard(
 
                     Text(
                         text = placeData.name,
-                        color = Color.White,
+                        color = Color.Red,
                         style = TextStyle(
                             fontSize = 35.sp,
-                            color = Color.White,
+                            color = Color.Black,
                             textAlign = TextAlign.Center,
                             shadow = Shadow(
                                 color = Color(0xFF333333),
@@ -420,7 +420,7 @@ fun PlacesCard(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = Color.White),
+                    .background(color = Color.Black),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
@@ -430,7 +430,7 @@ fun PlacesCard(
                     fillMaxWidth = false,
                     modifier = Modifier.width(80.dp),
                     heightIn = 37.dp,
-                    firstColor = Color.Red
+                    firstColor = Color.White
                 )
 
                 AuthButtonComponent(
