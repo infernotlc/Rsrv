@@ -7,14 +7,16 @@ data class Place (
     var name: String = "",
     var capacity: Int = 0,
     val id: String = "",
-    val placeImageUrl: String = ""
+    val placeImageUrl: String = "",
+    val reservationTimes: List<String> = emptyList()
     ): Parcelable {
 
     constructor(parcel: Parcel) : this(
         parcel.readString().toString(),
         parcel.readInt(),
         parcel.readString().toString(),
-        parcel.readString().toString()
+        parcel.readString().toString(),
+        parcel.createStringArrayList() ?: emptyList()
     ) {
     }
 
@@ -23,6 +25,7 @@ data class Place (
         parcel.writeInt(capacity)
         parcel.writeString(id)
         parcel.writeString(placeImageUrl)
+        parcel.writeStringList(reservationTimes)
     }
 
     override fun describeContents(): Int {
