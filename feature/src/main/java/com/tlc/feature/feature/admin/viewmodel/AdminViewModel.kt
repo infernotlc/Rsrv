@@ -87,7 +87,7 @@ class AdminViewModel @Inject constructor(
         }
     }
 
-    internal fun uploadImageAndAddPlace(uri: Uri, placeName: String) {
+    internal fun uploadImageAndAddPlace(uri: Uri, placeName: String, reservationTimes: List<String>) {
         _placeImageUIState.value = _placeImageUIState.value.copy(isLoading = true)
         viewModelScope.launch {
             uploadImageUseCase(uri, "places").collect { result ->
@@ -101,7 +101,8 @@ class AdminViewModel @Inject constructor(
                         )
                         val place = PlaceData(
                             name = placeName,
-                            placeImageUrl = imageUrl ?: ""
+                            placeImageUrl = imageUrl ?: "",
+                            reservationTimes = reservationTimes
                         )
                         addPlace(place)
                     }
