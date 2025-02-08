@@ -5,6 +5,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.tlc.domain.model.firebase.Reservation
 import com.tlc.domain.repository.firebase.ReservationRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -13,29 +16,35 @@ class ReservationRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth
 ) : ReservationRepository {
 
-        override suspend fun saveReservation(placeId: String, reservations: List<Reservation>): Result<Unit> {
-            return try {
-                val adminUserId = getAdminUserIdByPlace(placeId)
-                    ?: return Result.failure(Exception("Admin User ID not found for this place"))
+    override suspend fun saveReservation(
+        placeId: String,
+        reservations: List<Reservation>
+    ): Result<Unit> {
+        return try {
+            val adminUserId = getAdminUserIdByPlace(placeId)
+                ?: return Result.failure(Exception("Admin User ID not found for this place"))
 
-                val reservationRef = firestore.collection("users")
-                    .document(adminUserId)
-                    .collection("places")
-                    .document(placeId)
-                    .collection("reservations")
+            val reservationRef = firestore.collection("users")
+                .document(adminUserId)
+                .collection("places")
+                .document(placeId)
+                .collection("reservations")
 
-                reservations.forEach { reservation ->
-                    val newDocRef = reservationRef.document()
-                    newDocRef.set(reservation).await()
-                }
-
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Result.failure(e)
+            reservations.forEach { reservation ->
+                val newDocRef = reservationRef.document()
+                newDocRef.set(reservation).await()
             }
-        }
 
-    override suspend fun getReservations(placeId: String, onReservationsUpdated: (List<Reservation>) -> Unit) {
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getReservations(
+        placeId: String,
+        onReservationsUpdated: (List<Reservation>) -> Unit
+    ) {
         try {
             val adminUserId = getAdminUserIdByPlace(placeId) ?: return
             val reservationRef = firestore.collection("users")
@@ -57,10 +66,11 @@ class ReservationRepositoryImpl @Inject constructor(
 
                 Log.d("ReservationRepository", "Snapshot size: ${snapshot.size()}")
 
-                val reservations = snapshot.documents.mapNotNull { it.toObject(Reservation::class.java) }
+                val reservations =
+                    snapshot.documents.mapNotNull { it.toObject(Reservation::class.java) }
                 Log.d("ReservationRepository", "Updated Reservations: $reservations")
 
-                onReservationsUpdated(reservations) // Update ViewModel
+                onReservationsUpdated(reservations)
             }
         } catch (e: Exception) {
             Log.e("ReservationRepository", "Error fetching reservations", e)
@@ -68,41 +78,55 @@ class ReservationRepositoryImpl @Inject constructor(
     }
 
 
+    override suspend fun getReservationTimes(placeId: String): Flow<List<String>> = flow {
+        val adminUserId = getAdminUserIdByPlace(placeId) ?: return@flow
+        val document = firestore.collection("users")
+            .document(adminUserId)
+            .collection("places")
+            .document(placeId)
+            .get()
+            .await()
+
+        val times = document.get("reservationTimes") as? List<String> ?: emptyList()
+        emit(times)
+    }.catch {
+        emit(emptyList())
+    }
 
 
     private suspend fun getAdminUserIdByPlace(placeId: String): String? {
-            return try {
-                val usersSnapshot = firestore.collection("users")
-                    .whereEqualTo("role", "admin") // Get only admin users
+        return try {
+            val usersSnapshot = firestore.collection("users")
+                .whereEqualTo("role", "admin") // Get only admin users
+                .get()
+                .await()
+
+            Log.d("getAdminUserIdByPlace", "Admin users found: ${usersSnapshot.size()}")
+
+            for (userDoc in usersSnapshot.documents) {
+                val placesSnapshot = firestore.collection("users")
+                    .document(userDoc.id)
+                    .collection("places")
+                    .whereEqualTo("id", placeId)
                     .get()
                     .await()
 
-                Log.d("getAdminUserIdByPlace", "Admin users found: ${usersSnapshot.size()}")
+                Log.d(
+                    "getAdminUserIdByPlace",
+                    "Places found for user ${userDoc.id}: ${placesSnapshot.size()}"
+                )
 
-                for (userDoc in usersSnapshot.documents) {
-                    val placesSnapshot = firestore.collection("users")
-                        .document(userDoc.id)
-                        .collection("places")
-                        .whereEqualTo("id", placeId)
-                        .get()
-                        .await()
-
-                    Log.d(
-                        "getAdminUserIdByPlace",
-                        "Places found for user ${userDoc.id}: ${placesSnapshot.size()}"
-                    )
-
-                    if (!placesSnapshot.isEmpty) {
-                        return userDoc.id
-                    }
+                if (!placesSnapshot.isEmpty) {
+                    return userDoc.id
                 }
-
-                null
-            } catch (e: Exception) {
-                Log.e("getAdminUserIdByPlace", "Error fetching admin user ID", e)
-                null
             }
+
+            null
+        } catch (e: Exception) {
+            Log.e("getAdminUserIdByPlace", "Error fetching admin user ID", e)
+            null
         }
+    }
 
 
     override suspend fun cancelUnapprovedReservations(placeId: String) {
