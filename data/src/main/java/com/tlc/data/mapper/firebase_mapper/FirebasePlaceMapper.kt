@@ -29,6 +29,7 @@ fun PlaceData.toPlace(): Place {
     placeImageUrl = placeImageUrl,
     id = id,
     name = name,
-    capacity = capacity
+    capacity = capacity,
+        reservationTimes = reservationTimes
     )
 }
