@@ -1,6 +1,7 @@
 package com.tlc.data.ui.repository.firebase
 
 import android.net.Uri
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -24,29 +25,30 @@ class PlaceRepositoryImpl @Inject constructor(
     private val storage: FirebaseStorage
 ) : PlaceRepository {
 
-    override suspend fun addPlace(placeData: PlaceData): Flow<RootResult<Boolean>> =
-        flow {
-            emit(RootResult.Loading)
-            try {
-                val currentUser = firebaseAuth.currentUser
-                val userId = currentUser?.uid
-                if (userId != null) {
-                    val placeId =
-                        firestore.collection("users").document(userId).collection("places")
-                            .document().id
-                    val placeInfo =
-                        placeData.copy(id = placeId).toPlaceDataDto()
-                    firestore.collection("users").document(userId).collection("places")
-                        .document(placeId).set(placeInfo).await()
-                    emit(RootResult.Success(true))
-                } else {
-                    emit(RootResult.Error("User ID is null"))
-                }
-            } catch (e: Exception) {
-                emit(RootResult.Error(e.message ?: "Something went wrong"))
-            }
-        }.flowOn(Dispatchers.IO)
+    override suspend fun addPlace(placeData: PlaceData): Flow<RootResult<Boolean>> = flow {
+        emit(RootResult.Loading)
+        try {
+            val currentUser = firebaseAuth.currentUser
+            val userId = currentUser?.uid
+            if (userId != null) {
+                val placeId = firestore.collection("users").document(userId).collection("places")
+                    .document().id
 
+                val placeInfo = placeData.copy(id = placeId, reservationTimes = placeData.reservationTimes.toList())
+
+                Log.d("FirestoreSave", "Saving place: $placeInfo")
+
+                firestore.collection("users").document(userId).collection("places")
+                    .document(placeId).set(placeInfo).await()
+
+                emit(RootResult.Success(true))
+            } else {
+                emit(RootResult.Error("User ID is null"))
+            }
+        } catch (e: Exception) {
+            emit(RootResult.Error(e.message ?: "Something went wrong"))
+        }
+    }.flowOn(Dispatchers.IO)
 
     override suspend fun deletePlace(competitionId: String): Flow<RootResult<Boolean>> =
         flow {
@@ -77,8 +79,6 @@ class PlaceRepositoryImpl @Inject constructor(
                 emit(RootResult.Error(e.message ?: "Something went wrong"))
             }
         }.flowOn(Dispatchers.IO)
-
-
 
     override suspend fun updatePlace(
         placeId: String,

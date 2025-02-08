@@ -168,7 +168,9 @@ fun AdminScreen(
                         onSave = { place ->
                             adminViewModel.uploadImageAndAddPlace(
                                 selectedImageUri.value!!,
-                                place.name
+                                place.name,
+                                reservationTimes = place.reservationTimes
+
                             )
                         },
                         onImagePick = {
