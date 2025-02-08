@@ -6,19 +6,21 @@ import com.tlc.domain.model.firebase.PlaceData
 
 fun PlaceDataDto.toPlaceData(): PlaceData {
     return PlaceData(
-        placeImageUrl = placeImageUrl,
-        id = id,
         name = name,
         capacity = capacity,
+        id = id,
+        placeImageUrl = placeImageUrl,
+        reservationTimes = reservationTimes // Map reservationTimes
     )
 }
 
 fun PlaceData.toPlaceDataDto(): PlaceDataDto {
     return PlaceDataDto(
-        placeImageUrl = placeImageUrl,
-        id = id,
         name = name,
         capacity = capacity,
+        id = id,
+        placeImageUrl = placeImageUrl,
+        reservationTimes = reservationTimes // Map reservationTimes
     )
 }
 
