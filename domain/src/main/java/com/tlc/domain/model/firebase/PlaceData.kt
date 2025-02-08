@@ -6,5 +6,6 @@ data class PlaceData(
     var name: String = "",
     var capacity: Int = 0,
     var id: String = "",
-    var placeImageUrl: String
+    var placeImageUrl: String,
+    var reservationTimes: List<String> = emptyList()
 ):Serializable
