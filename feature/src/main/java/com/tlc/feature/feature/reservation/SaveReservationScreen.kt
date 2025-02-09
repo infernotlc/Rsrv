@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,8 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -63,8 +60,10 @@ fun SaveReservationScreen(
 
     val availableTimes by viewModel.availableTimes.collectAsState(initial = emptyList())
 
-    LaunchedEffect(placeId) {
-        viewModel.fetchAvailableTimes(placeId,tableId)
+    LaunchedEffect(date) { // Fetch times whenever date changes
+        if (date.isNotBlank()) {
+            viewModel.fetchAvailableTimes(placeId, tableId, date)
+        }
     }
 
     Scaffold(
@@ -77,21 +76,17 @@ fun SaveReservationScreen(
                 OutlinedTextField(
                     value = customerName,
                     onValueChange = { customerName = it },
-                    label = { Text("Rsrv Holder Name") },
+                    label = { Text("Reservation Holder Name") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Column(
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    PhoneNumber(
-                        phoneNumber = customerPhoneNo,
-                        onPhoneNumberChange = { customerPhoneNo = it },
-                        modifier = Modifier
-                            .width(200.dp)
-                            .background(Color.White)
-                    )
-                }
+                PhoneNumber(
+                    phoneNumber = customerPhoneNo,
+                    onPhoneNumberChange = { customerPhoneNo = it },
+                    modifier = Modifier
+                        .width(200.dp)
+                        .background(Color.White)
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -106,41 +101,39 @@ fun SaveReservationScreen(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         DatePickerWithDialog(
-                            modifier = Modifier.weight(1f), // Take available space
-                            onDateSelected = { date = it }
+                            modifier = Modifier.weight(1f),
+                            onDateSelected = { selectedDate ->
+                                date = selectedDate
+                            }
                         )
-                        Spacer(modifier = Modifier.width(16.dp)) // Add spacing between components
+                        Spacer(modifier = Modifier.width(16.dp))
 
                         AvailableTimesDropdown(
                             selectedTime = selectedTime,
                             availableTimes = availableTimes,
                             onTimeSelected = { selectedTime = it },
-                            modifier = Modifier.weight(1f) // Take available space
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
-                    Row(
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ) {
-                        RsrvCountDropdown(
-                            selectedCount = selectedCount,
-                            onCountSelected = { count -> selectedCount = count },
-                            modifier = Modifier.weight(1f)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
+                    RsrvCountDropdown(
+                        selectedCount = selectedCount,
+                        onCountSelected = { count -> selectedCount = count },
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
 
-                        PetCountDropdown(
-                            selectedCount = selectedAnimalCount,
-                            onCountSelected = { count -> selectedAnimalCount = count },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    PetCountDropdown(
+                        selectedCount = selectedAnimalCount,
+                        onCountSelected = { count -> selectedAnimalCount = count },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -168,27 +161,30 @@ fun SaveReservationScreen(
                 ) {
                     Text("Save Reservation")
                 }
-
-                when (viewModel.uiState.value) {
-                    is ReservationUiState.Loading -> {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                    }
-
-                    is ReservationUiState.Success -> {
-                        val message = (viewModel.uiState.value as ReservationUiState.Success).message
-                        Text(text = message, color = Color.Green)
-                    }
-
-                    is ReservationUiState.Error -> {
-                        val message = (viewModel.uiState.value as ReservationUiState.Error).message
-                        Text(text = message, color = Color.Red)
-                    }
-
-                    else -> {}
-                }
             }
         }
     )
+    when (viewModel.uiState.value) {
+        is ReservationUiState.Loading -> {
+            CircularProgressIndicator()
+        }
+
+        is ReservationUiState.Success -> {
+            val message = (viewModel.uiState.value as ReservationUiState.Success).message
+            Text(text = message, color = Color.Green)
+        }
+
+        is ReservationUiState.Error -> {
+            val message = (viewModel.uiState.value as ReservationUiState.Error).message
+            Text(text = message, color = Color.Red)
+        }
+
+        else -> {}
+    }
 }
+
+
+
+
 
 
