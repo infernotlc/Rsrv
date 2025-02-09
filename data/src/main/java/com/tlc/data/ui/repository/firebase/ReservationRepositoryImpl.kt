@@ -30,9 +30,11 @@ class ReservationRepositoryImpl @Inject constructor(
                     .document(adminUserId)
                     .collection("places")
                     .document(placeId)
-                    .collection("design")  // Save under the specific table
+                    .collection("design")
                     .document(reservation.tableId)
                     .collection("reservations")
+                    .document(reservation.date)  // Group by date
+                    .collection("times")
                     .document()
 
                 tableRef.set(reservation).await()
@@ -43,9 +45,11 @@ class ReservationRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
     override suspend fun getReservations(
         placeId: String,
-        onReservationsUpdated: (List<DesignItem>) -> Unit
+        date: String,
+        onReservationsUpdated: (List<Reservation>) -> Unit
     ) {
         try {
             val adminUserId = getAdminUserIdByPlace(placeId) ?: return
@@ -55,29 +59,31 @@ class ReservationRepositoryImpl @Inject constructor(
                 .document(placeId)
                 .collection("design")
 
-            reservationRef.addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    Log.e("ReservationRepository", "Error listening for reservation changes", e)
-                    return@addSnapshotListener
+            reservationRef.get().addOnSuccessListener { snapshot ->
+                val reservations = mutableListOf<Reservation>()
+                snapshot.documents.forEach { tableDoc ->
+                    val tableId = tableDoc.id
+                    firestore.collection("users")
+                        .document(adminUserId)
+                        .collection("places")
+                        .document(placeId)
+                        .collection("design")
+                        .document(tableId)
+                        .collection("reservations")
+                        .document(date)
+                        .collection("times")
+                        .get()
+                        .addOnSuccessListener { timeSnapshot ->
+                            reservations.addAll(timeSnapshot.documents.mapNotNull { it.toObject(Reservation::class.java) })
+                            onReservationsUpdated(reservations)
+                        }
                 }
-
-                if (snapshot == null) {
-                    Log.e("ReservationRepository", "Snapshot is null")
-                    return@addSnapshotListener
-                }
-
-                Log.d("ReservationRepository", "Snapshot size: ${snapshot.size()}")
-
-                val reservations =
-                    snapshot.documents.mapNotNull { it.toObject(DesignItem::class.java) }
-                Log.d("ReservationRepository", "Updated Reservations: $reservations")
-
-                onReservationsUpdated(reservations)
             }
         } catch (e: Exception) {
             Log.e("ReservationRepository", "Error fetching reservations", e)
         }
     }
+
 
 
     override suspend fun getSavedReservationTimes(placeId: String): Flow<List<String>> = flow {
@@ -95,7 +101,9 @@ class ReservationRepositoryImpl @Inject constructor(
         emit(emptyList())
     }
 
-    override suspend fun getReservedTimesFromFirestore(placeId: String, tableId: String): List<String> {
+    override suspend fun getReservedTimesFromFirestore(
+        placeId: String,
+        tableId: String, date: String): List<String> {
         return try {
             val adminUserId = getAdminUserIdByPlace(placeId) ?: return emptyList()
 
@@ -103,9 +111,11 @@ class ReservationRepositoryImpl @Inject constructor(
                 .document(adminUserId)
                 .collection("places")
                 .document(placeId)
-                .collection("design") // Fetch from table-specific reservations
+                .collection("design")
                 .document(tableId)
                 .collection("reservations")
+                .document(date) // Fetch by date
+                .collection("times")
                 .get()
                 .await()
 
