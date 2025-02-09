@@ -32,8 +32,8 @@ class CustomerViewModel @Inject constructor(
     private val _designState = MutableStateFlow(DesignState())
     val designState: StateFlow<DesignState> = _designState.asStateFlow()
 
-    private val _reservationsState = MutableStateFlow<List<DesignItem>>(emptyList())
-    val reservationsState: StateFlow<List<DesignItem>> = _reservationsState.asStateFlow()
+    private val _reservationsState = MutableStateFlow<List<Reservation>>(emptyList())
+    val reservationsState: StateFlow<List<Reservation>> = _reservationsState.asStateFlow()
 
     fun fetchPlaces() {
         Log.d("CustomerViewModel", "Fetching places...")
@@ -57,9 +57,9 @@ class CustomerViewModel @Inject constructor(
         }
     }
 
-    fun fetchReservations(placeId: String) {
+    fun fetchReservations(placeId: String,date: String) {
         viewModelScope.launch {
-            reservationRepository.getReservations(placeId) { updatedReservations ->
+            reservationRepository.getReservations(placeId,date) { updatedReservations ->
                 _reservationsState.value = updatedReservations
             }
         }

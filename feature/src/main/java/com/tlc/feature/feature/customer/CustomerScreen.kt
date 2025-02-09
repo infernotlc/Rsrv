@@ -42,6 +42,9 @@ import com.tlc.domain.utils.RootResult
 import com.tlc.feature.feature.customer.viewmodel.CustomerViewModel
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -158,7 +161,10 @@ fun CustomerScreen(
                                         onClick = {
                                             selectedPlaceId = place.id
                                             viewModel.fetchDesign(place.id)
-                                            viewModel.fetchReservations(place.id)
+                                            val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(
+                                                Date()
+                                            )
+                                            viewModel.fetchReservations(place.id, date = currentDate)
                                             showDesignPreview = true
                                         }
                                     )
@@ -206,13 +212,13 @@ fun PlaceItem(place: Place, onClick: () -> Unit) {
 @Composable
 fun DesignPreview(
     designItems: List<DesignItem>,
-    reservations: List<DesignItem>,
+    reservations: List<Reservation>,
     onTableClick: (DesignItem) -> Unit = {}
 ) {
     val density = LocalDensity.current.density
 
     // Get a list of reserved table IDs from the reservations
-    val reservedTableIds = reservations.filter { it.isReserved }.map { it.designId }
+    val reservedTableIds = designItems.filter { it.isReserved }.map { it.designId }
 
 // Get a list of available table IDs (not reserved)
 
