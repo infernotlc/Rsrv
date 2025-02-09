@@ -78,7 +78,7 @@ class ReservationRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun getReservationTimes(placeId: String): Flow<List<String>> = flow {
+    override suspend fun getSavedReservationTimes(placeId: String): Flow<List<String>> = flow {
         val adminUserId = getAdminUserIdByPlace(placeId) ?: return@flow
         val document = firestore.collection("users")
             .document(adminUserId)
@@ -93,6 +93,21 @@ class ReservationRepositoryImpl @Inject constructor(
         emit(emptyList())
     }
 
+    override suspend fun getReservedTimesFromFirestore(placeId: String): List<String> {
+        return try {
+            val snapshot = firestore.collection("users")
+                .document(getAdminUserIdByPlace(placeId) ?: return emptyList())
+                .collection("places")
+                .document(placeId)
+                .collection("reservations")
+                .get()
+                .await()
+
+            snapshot.documents.mapNotNull { it.getString("time") }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 
     private suspend fun getAdminUserIdByPlace(placeId: String): String? {
         return try {

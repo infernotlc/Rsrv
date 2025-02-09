@@ -11,7 +11,9 @@ interface ReservationRepository {
 
     suspend fun getReservations(placeId: String, onReservationsUpdated: (List<Reservation>) -> Unit)
 
-    suspend fun getReservationTimes(placeId: String): Flow<List<String>>
+    suspend fun getSavedReservationTimes(placeId: String): Flow<List<String>>
+
+    suspend fun getReservedTimesFromFirestore(placeId: String): List<String>
 
     suspend fun cancelUnapprovedReservations(placeId: String)
 
