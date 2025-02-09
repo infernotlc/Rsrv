@@ -29,6 +29,9 @@ class SaveReservationViewModel @Inject constructor(
             try {
                 saveReservationUseCase(placeId, reservations)
                 _uiState.value = ReservationUiState.Success("Reservation saved successfully!")
+
+                fetchAvailableTimes(placeId)
+
             } catch (e: Exception) {
                 _uiState.value = ReservationUiState.Error(e.message ?: "Failed to save reservation")
             }
@@ -41,9 +44,10 @@ class SaveReservationViewModel @Inject constructor(
 
     fun fetchAvailableTimes(placeId: String) {
         viewModelScope.launch {
-            reservationRepository.getReservationTimes(placeId)
+            reservationRepository.getSavedReservationTimes(placeId)
                 .collect { times ->
-                    _availableTimes.value = times
+                    val reservedTimes = reservationRepository.getReservedTimesFromFirestore(placeId)
+                    _availableTimes.value = times.filterNot { it in reservedTimes }
                 }
         }
     }
