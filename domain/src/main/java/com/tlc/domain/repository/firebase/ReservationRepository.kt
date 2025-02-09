@@ -10,11 +10,11 @@ interface ReservationRepository {
         reservations: List<Reservation>
     ): Result<Unit>
 
-    suspend fun getReservations(placeId: String, onReservationsUpdated: (List<DesignItem>) -> Unit)
+    suspend fun getReservations(placeId: String, date: String, onReservationsUpdated: (List<Reservation>) -> Unit)
 
     suspend fun getSavedReservationTimes(placeId: String): Flow<List<String>>
 
-    suspend fun getReservedTimesFromFirestore(placeId: String, tableId: String): List<String>
+    suspend fun getReservedTimesFromFirestore(placeId: String, tableId: String, date:String): List<String>
 
     suspend fun markTableAsReserved(placeId: String, designId: String): Result<Unit>
 
