@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,28 +22,29 @@ class SaveReservationViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ReservationUiState>(ReservationUiState.Idle)
-    val uiState: StateFlow<ReservationUiState> = _uiState
+    val uiState: StateFlow<ReservationUiState> = _uiState.asStateFlow()
 
     private val _availableTimes = MutableStateFlow<List<String>>(emptyList())
-    val availableTimes: StateFlow<List<String>> = _availableTimes
+    val availableTimes: StateFlow<List<String>> = _availableTimes.asStateFlow()
 
     private val _designState = MutableStateFlow(RootResult.Success<List<DesignItem>>(emptyList()))
     val designState: StateFlow<RootResult<List<DesignItem>>> = _designState.asStateFlow()
 
-
     fun saveReservation(placeId: String, reservations: List<Reservation>) {
+        if (reservations.isEmpty()) {
+            _uiState.value = ReservationUiState.Error("No reservations to save!")
+            return
+        }
+
         _uiState.value = ReservationUiState.Loading
         viewModelScope.launch {
             try {
+                val date = reservations.first().date // Extract date from reservations
                 saveReservationUseCase(placeId, reservations)
                 _uiState.value = ReservationUiState.Success("Reservation saved successfully!")
-                val tableId = reservations.firstOrNull()?.tableId
-                if (tableId != null) {
-                    fetchAvailableTimes(placeId, tableId)
-                } else {
-                    _uiState.value = ReservationUiState.Error("Table ID is missing!")
-                }
 
+                val tableId = reservations.first().tableId
+                fetchAvailableTimes(placeId, tableId, date)
             } catch (e: Exception) {
                 _uiState.value = ReservationUiState.Error(e.message ?: "Failed to save reservation")
             }
@@ -53,39 +55,42 @@ class SaveReservationViewModel @Inject constructor(
         _uiState.value = state
     }
 
-    fun fetchAvailableTimes(placeId: String, tableId: String) {
+    fun fetchAvailableTimes(placeId: String, tableId: String, selectedDate: String) {
         viewModelScope.launch {
-            reservationRepository.getSavedReservationTimes(placeId)
-                .collect { times ->
-                    val reservedTimes =
-                        reservationRepository.getReservedTimesFromFirestore(placeId, tableId)
-                    val filteredTimes = times.filterNot { it in reservedTimes }
+            try {
+                val savedTimes = reservationRepository.getSavedReservationTimes(placeId).first()
+                val reservedTimes = reservationRepository.getReservedTimesFromFirestore(placeId, tableId, selectedDate)
 
-                    _availableTimes.value = filteredTimes
+                _availableTimes.value = savedTimes.filterNot { it in reservedTimes }
 
-                    if (filteredTimes.isEmpty()) {
-                        markTableAsReserved(placeId, tableId)
-                    }
+                if (_availableTimes.value.isEmpty()) {
+                    markTableAsReserved(placeId, tableId)
                 }
+            } catch (e: Exception) {
+                _uiState.value = ReservationUiState.Error("Failed to fetch available times: ${e.message}")
+            }
         }
     }
 
     private fun markTableAsReserved(placeId: String, tableId: String) {
+        _uiState.value = ReservationUiState.Loading
         viewModelScope.launch {
-            reservationRepository.markTableAsReserved(placeId, tableId)
-            removeTableFromUI(tableId) // Remove table if fully booked
+            try {
+                reservationRepository.markTableAsReserved(placeId, tableId)
+                _uiState.value = ReservationUiState.Success("Table is fully booked for  and now hidden!")
+                removeTableFromUI(tableId)
+            } catch (e: Exception) {
+                _uiState.value = ReservationUiState.Error("Failed to mark table as reserved: ${e.message}")
+            }
         }
     }
 
     private fun removeTableFromUI(tableId: String) {
-        _uiState.value = ReservationUiState.Success("Table $tableId fully booked and now hidden!")
-
         val currentDesignItems = (_designState.value as? RootResult.Success<List<DesignItem>>)?.data ?: emptyList()
-
         _designState.value = RootResult.Success(currentDesignItems.filterNot { it.designId == tableId })
     }
-
 }
+
 sealed class ReservationUiState {
     object Idle : ReservationUiState()
     object Loading : ReservationUiState()
