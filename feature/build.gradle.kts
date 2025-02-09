@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.foundation.layout)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.animation.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
