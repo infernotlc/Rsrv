@@ -3,6 +3,7 @@ package com.tlc.data.ui.repository.firebase
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.tlc.domain.model.firebase.DesignItem
 import com.tlc.domain.model.firebase.Reservation
 import com.tlc.domain.repository.firebase.ReservationRepository
 import kotlinx.coroutines.flow.Flow
@@ -24,15 +25,17 @@ class ReservationRepositoryImpl @Inject constructor(
             val adminUserId = getAdminUserIdByPlace(placeId)
                 ?: return Result.failure(Exception("Admin User ID not found for this place"))
 
-            val reservationRef = firestore.collection("users")
-                .document(adminUserId)
-                .collection("places")
-                .document(placeId)
-                .collection("reservations")
-
             reservations.forEach { reservation ->
-                val newDocRef = reservationRef.document()
-                newDocRef.set(reservation).await()
+                val tableRef = firestore.collection("users")
+                    .document(adminUserId)
+                    .collection("places")
+                    .document(placeId)
+                    .collection("design")  // Save under the specific table
+                    .document(reservation.tableId)
+                    .collection("reservations")
+                    .document()
+
+                tableRef.set(reservation).await()
             }
 
             Result.success(Unit)
@@ -40,10 +43,9 @@ class ReservationRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
-
     override suspend fun getReservations(
         placeId: String,
-        onReservationsUpdated: (List<Reservation>) -> Unit
+        onReservationsUpdated: (List<DesignItem>) -> Unit
     ) {
         try {
             val adminUserId = getAdminUserIdByPlace(placeId) ?: return
@@ -51,7 +53,7 @@ class ReservationRepositoryImpl @Inject constructor(
                 .document(adminUserId)
                 .collection("places")
                 .document(placeId)
-                .collection("reservations")
+                .collection("design")
 
             reservationRef.addSnapshotListener { snapshot, e ->
                 if (e != null) {
@@ -67,7 +69,7 @@ class ReservationRepositoryImpl @Inject constructor(
                 Log.d("ReservationRepository", "Snapshot size: ${snapshot.size()}")
 
                 val reservations =
-                    snapshot.documents.mapNotNull { it.toObject(Reservation::class.java) }
+                    snapshot.documents.mapNotNull { it.toObject(DesignItem::class.java) }
                 Log.d("ReservationRepository", "Updated Reservations: $reservations")
 
                 onReservationsUpdated(reservations)
@@ -93,12 +95,16 @@ class ReservationRepositoryImpl @Inject constructor(
         emit(emptyList())
     }
 
-    override suspend fun getReservedTimesFromFirestore(placeId: String): List<String> {
+    override suspend fun getReservedTimesFromFirestore(placeId: String, tableId: String): List<String> {
         return try {
+            val adminUserId = getAdminUserIdByPlace(placeId) ?: return emptyList()
+
             val snapshot = firestore.collection("users")
-                .document(getAdminUserIdByPlace(placeId) ?: return emptyList())
+                .document(adminUserId)
                 .collection("places")
                 .document(placeId)
+                .collection("design") // Fetch from table-specific reservations
+                .document(tableId)
                 .collection("reservations")
                 .get()
                 .await()
@@ -108,6 +114,27 @@ class ReservationRepositoryImpl @Inject constructor(
             emptyList()
         }
     }
+
+    override suspend fun markTableAsReserved(placeId: String, designId: String): Result<Unit> {
+        return try {
+            val adminUserId = getAdminUserIdByPlace(placeId)
+                ?: return Result.failure(Exception("Admin User ID not found for this place"))
+
+            firestore.collection("users")
+                .document(adminUserId)
+                .collection("places")
+                .document(placeId)
+                .collection("design")
+                .document(designId)
+                .update("reserved", true)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 
     private suspend fun getAdminUserIdByPlace(placeId: String): String? {
         return try {

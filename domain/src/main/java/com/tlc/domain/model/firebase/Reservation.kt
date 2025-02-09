@@ -13,11 +13,11 @@ data class Reservation(
     val date: String = "",
     val time: String = "",
 // or use @field:JvmField  instead of those ones
-    @get:PropertyName("reserved") @set:PropertyName("reserved")
-    var isReserved: Boolean = false,
-
-    @get:PropertyName("approved") @set:PropertyName("approved")
-    var isApproved: Boolean = false,
+//    @get:PropertyName("reserved") @set:PropertyName("reserved")
+//    var isReserved: Boolean = false,
+//
+//    @get:PropertyName("approved") @set:PropertyName("approved")
+//    var isApproved: Boolean = false,
 
     val timestamp: Timestamp? = null
 )

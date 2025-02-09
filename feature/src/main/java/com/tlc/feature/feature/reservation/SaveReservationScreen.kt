@@ -64,7 +64,7 @@ fun SaveReservationScreen(
     val availableTimes by viewModel.availableTimes.collectAsState(initial = emptyList())
 
     LaunchedEffect(placeId) {
-        viewModel.fetchAvailableTimes(placeId)
+        viewModel.fetchAvailableTimes(placeId,tableId)
     }
 
     Scaffold(
@@ -158,7 +158,6 @@ fun SaveReservationScreen(
                                 animalCount = selectedAnimalCount ?: 0,
                                 date = date,
                                 time = selectedTime!!,
-                                isApproved = false,
                                 timestamp = Timestamp.now()
                             )
                             viewModel.saveReservation(placeId, listOf(reservation))

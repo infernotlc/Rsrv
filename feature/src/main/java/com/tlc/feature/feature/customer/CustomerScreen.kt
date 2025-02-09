@@ -202,16 +202,17 @@ fun PlaceItem(place: Place, onClick: () -> Unit) {
 }
 
 
+
 @Composable
 fun DesignPreview(
     designItems: List<DesignItem>,
-    reservations: List<Reservation>,
+    reservations: List<DesignItem>,
     onTableClick: (DesignItem) -> Unit = {}
 ) {
     val density = LocalDensity.current.density
 
     // Get a list of reserved table IDs from the reservations
-    val reservedTableIds = reservations.filter { it.isReserved }.map { it.tableId }
+    val reservedTableIds = reservations.filter { it.isReserved }.map { it.designId }
 
 // Get a list of available table IDs (not reserved)
 

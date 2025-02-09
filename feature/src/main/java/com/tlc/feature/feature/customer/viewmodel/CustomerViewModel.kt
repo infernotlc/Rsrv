@@ -3,6 +3,7 @@ package com.tlc.feature.feature.customer.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tlc.domain.model.firebase.DesignItem
 import com.tlc.domain.model.firebase.Reservation
 import com.tlc.domain.repository.firebase.ReservationRepository
 import com.tlc.domain.use_cases.customer.GetCustomerPlacesUseCase
@@ -31,8 +32,8 @@ class CustomerViewModel @Inject constructor(
     private val _designState = MutableStateFlow(DesignState())
     val designState: StateFlow<DesignState> = _designState.asStateFlow()
 
-    private val _reservationsState = MutableStateFlow<List<Reservation>>(emptyList())
-    val reservationsState: StateFlow<List<Reservation>> = _reservationsState.asStateFlow()
+    private val _reservationsState = MutableStateFlow<List<DesignItem>>(emptyList())
+    val reservationsState: StateFlow<List<DesignItem>> = _reservationsState.asStateFlow()
 
     fun fetchPlaces() {
         Log.d("CustomerViewModel", "Fetching places...")
