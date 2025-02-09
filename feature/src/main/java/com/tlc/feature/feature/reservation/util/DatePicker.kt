@@ -2,6 +2,7 @@ package com.tlc.feature.feature.reservation.util
 
 
 import android.os.Build
+import android.widget.DatePicker
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,6 +41,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,6 +51,9 @@ fun DatePickerWithDialog(
     onDateSelected: (String) -> Unit,
 ) {
     val dateState = rememberDatePickerState()
+    val calendar = Calendar.getInstance()
+    val todayMillis = calendar.timeInMillis
+
     val millisToLocalDate = dateState.selectedDateMillis?.let {
         DateUtils().convertMillisToLocalDate(it)
     }
@@ -60,15 +65,23 @@ fun DatePickerWithDialog(
     val dateToString = millisToLocalDate?.let {
         DateUtils().dateToString(it)
     } ?: "Choose Date"
+
     var showDialog by remember { mutableStateOf(false) }
+
+    // Handle date selection validation
+    LaunchedEffect(dateState.selectedDateMillis) {
+        if (dateState.selectedDateMillis != null && dateState.selectedDateMillis!! < todayMillis) {
+            // Reset the date if it's in the past
+            dateState.selectedDateMillis = todayMillis
+        }
+    }
 
     Card(
         modifier = Modifier
             .size(width = 100.dp, height = 100.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(8.dp),
-
-        ) {
+    ) {
         Box(
             Modifier
                 .fillMaxSize()
@@ -76,7 +89,6 @@ fun DatePickerWithDialog(
                     showDialog = true
                 }
         ) {
-
             Column(
                 modifier = modifier
                     .background(color = MaterialTheme.colorScheme.surface)
@@ -84,9 +96,7 @@ fun DatePickerWithDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceEvenly
             ) {
-                IconButton(onClick = {
-                    showDialog = true
-                }) {
+                IconButton(onClick = { showDialog = true }) {
                     Icon(Icons.Default.DateRange, contentDescription = "Select Date")
                 }
                 Text(
@@ -104,11 +114,11 @@ fun DatePickerWithDialog(
                                     val formattedDate = DateUtils().dateToString(it)
                                     onDateSelected(formattedDate) // Pass the formatted date
                                 }
-                            }) { Text("OK", color = MaterialTheme.colorScheme.primary)
-                            }
+                            }) { Text("OK", color = MaterialTheme.colorScheme.primary) }
                         },
                         dismissButton = {
-                            TextButton(onClick = { showDialog = false }) { Text("Cancel", color = MaterialTheme.colorScheme.secondary)
+                            TextButton(onClick = { showDialog = false }) {
+                                Text("Cancel", color = MaterialTheme.colorScheme.secondary)
                             }
                         },
                         colors = DatePickerDefaults.colors(
