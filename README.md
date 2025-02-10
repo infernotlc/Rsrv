@@ -16,21 +16,22 @@ https://drive.google.com/file/d/1K_UbTClfNRs3TlYI3QfC7rusKMr2XQje/view?usp=shari
 - if there is no available times for it day remove table from design
   
 Next Features:
-Show reservations for admins and visitors
-Admins and visitors can cancel reservations
-Settings screen
-More information about places
-Save places by country and city, approve them to show their places
-Fetch places by country and city
-Take comments for places
-Punishment system for non made visits (after 30 minutes of reservation can be automatically cancel)
-If made more than 5 cancel account will be deleted
-Notifications for admins and users
-Reports for admins daily, weekly, monthly
+- Show reservations for admins and visitors
+- Admins and visitors can cancel reservations
+-Settings screen
+-More information about places
+-Save places by country and city, approve them to show their places
+-Fetch places by country and city
+-Take comments for places
+-Punishment system for non made visits (after 30 minutes of reservation can be automatically cancel)
+-If made more than 5 cancel account will be deleted
+-Notifications for admins and users
+-Reports for admins daily, weekly, monthly
 
 
 Admin Dashboard:
 Add and manage places.
+Add image, name, reservation times.
 Design tables and chairs for each place (drag-and-drop functionality).
 Save and load designs dynamically.
 
@@ -45,7 +46,7 @@ User roles: Admin and Customer.
 
 Reservation Management:
 Real-time updates on reserved tables using Firebase Firestore.
-Customers can see which tables are available and which are already reserved.
+Customers can see which tables are available and which are already reserved per day and time.
 
 Tech Stack
 Language: Kotlin
@@ -53,7 +54,7 @@ UI: Jetpack Compose
 Architecture: Multi-module architecture with MVVM pattern
 State Management: State and ViewModels
 Dependency Injection: Hilt
-Backend: Firebase Authentication & Firestore
+Backend: Firebase Authentication & Firestore, Cloud Storage
 Navigation: Compose Navigation
 
 Modules
