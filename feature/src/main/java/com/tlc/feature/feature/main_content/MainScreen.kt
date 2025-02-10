@@ -13,15 +13,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,9 +49,11 @@ import com.tlc.feature.R
 import com.tlc.feature.feature.auth.login.viewmodel.LoginViewModel
 import com.tlc.feature.feature.component.LoadingLottie
 import com.tlc.feature.feature.component.auth_components.AuthButtonComponent
+import com.tlc.feature.feature.main_content.utils.NavDrawer
 import com.tlc.feature.feature.main_content.viewmodel.MainContentViewModel
 import com.tlc.feature.navigation.NavigationGraph
 import com.tlc.feature.navigation.RsrvNavigation
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -66,6 +73,8 @@ fun MainScreen(
     val context = LocalContext.current
 
     var currentRoute by remember { mutableStateOf<String?>(null) }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(navController) {
         navController.addOnDestinationChangedListener { _, destination, _ ->
@@ -143,129 +152,143 @@ fun MainScreen(
             }
         )
     }
-
-    Scaffold(
-        containerColor = Color.Black,
-        topBar = {
-            if (currentRoute != NavigationGraph.DESIGN_SCREEN.route) {
-                appBarTitle?.let { title ->
-                    Box(modifier = Modifier.background(Color.Red)) {
-                        CenterAlignedTopAppBar(
-                            colors = TopAppBarColors(
-                                actionIconContentColor = Color.White,
-                                containerColor = Color.Black,
-                                navigationIconContentColor = Color.White,
-                                scrolledContainerColor = Color.Red,
-                                titleContentColor = Color.White
-                            ),
-                            title = {
-                                Text(
-                                    text = title,
-                                    style = TextStyle(
-                                        color = Color.White,
-                                        fontSize = 25.sp
-                                    ),
-                                )
-                            },
-                            navigationIcon = {
-                                if (title != "Customer Screen" && title != "Admin Screen" && title != "Login Screen" && title != "Register Screen" && title != "Forget Password Screen") {
-                                    IconButton(onClick = { navController.navigateUp() }) {
-                                        Icon(
-                                            painter = painterResource(R.drawable.ic_left),
-                                            contentDescription = "Back",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(30.dp)
-                                        )
-                                    }
-                                }
-                            },
-                            actions = {
-                                if (title == "Customer Screen" || title == "Admin Screen" || title == "Save Your Rsrv") {
-                                    var expanded by remember { mutableStateOf(false) }
-                                    IconButton(onClick = { expanded = !expanded }) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_vert),
-                                            contentDescription = "Settings",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(30.dp)
-                                        )
-                                    }
-                                    MaterialTheme(
-                                        shapes = MaterialTheme.shapes.copy(
-                                            extraSmall = RoundedCornerShape(16.dp)
-                                        )
-                                    ) {
-                                        DropdownMenu(
-                                            expanded = expanded,
-                                            onDismissRequest = { expanded = false },
-                                            Modifier.background(Color.White)
-                                        ) {
-                                            DropdownMenuItem(
-                                                text = { Text("Delete Account") },
-                                                onClick = {
-                                                    expanded = false
-                                                    dialogAction = "Delete Account"
-                                                    showDialog = true
-                                                }
-                                            )
-                                            DropdownMenuItem(
-                                                text = { Text("Logout", color = Color.Black) },
-                                                onClick = {
-                                                    expanded = false
-                                                    dialogAction = "Logout"
-                                                    showDialog = true
-                                                }
-                                            )
-                                            DropdownMenuItem(
-                                                text = { Text("Settings", color = Color.Black) },
-                                                onClick = {
-                                                    expanded = false
-                                                    navController.navigate(NavigationGraph.SETTINGS_SCREEN.route)
-                                                    appBarTitle = "Settings"
-                                                    navigationKey++
-
-                                                }
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            NavDrawer(navController) {
+                scope.launch {
+                    drawerState.close()
+                }
+            }
+        }
+    ) {
+        Scaffold(
+            containerColor = Color.Black,
+            topBar = {
+                if (currentRoute != NavigationGraph.DESIGN_SCREEN.route) {
+                    appBarTitle?.let { title ->
+                        Box(modifier = Modifier.background(Color.Red)) {
+                            CenterAlignedTopAppBar(
+                                colors = TopAppBarColors(
+                                    actionIconContentColor = Color.White,
+                                    containerColor = Color.Black,
+                                    navigationIconContentColor = Color.White,
+                                    scrolledContainerColor = Color.Red,
+                                    titleContentColor = Color.White
+                                ),
+                                title = {
+                                    Text(
+                                        text = title,
+                                        style = TextStyle(
+                                            color = Color.White,
+                                            fontSize = 25.sp
+                                        ),
+                                    )
+                                },
+                                navigationIcon = {
+                                    if (title != "Customer Screen" && title != "Admin Screen" && title != "Login Screen" && title != "Register Screen" && title != "Forget Password Screen") {
+                                        IconButton(onClick = { navController.navigateUp() }) {
+                                            Icon(
+                                                painter = painterResource(R.drawable.ic_left),
+                                                contentDescription = "Back",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(30.dp)
                                             )
                                         }
                                     }
+                                },
+                                actions = {
+                                    if (title == "Customer Screen" || title == "Admin Screen" || title == "Save Your Rsrv") {
+                                        var expanded by remember { mutableStateOf(false) }
+                                        IconButton(onClick = { expanded = !expanded }) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_vert),
+                                                contentDescription = "Settings",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(30.dp)
+                                            )
+                                        }
+                                        MaterialTheme(
+                                            shapes = MaterialTheme.shapes.copy(
+                                                extraSmall = RoundedCornerShape(16.dp)
+                                            )
+                                        ) {
+                                            DropdownMenu(
+                                                expanded = expanded,
+                                                onDismissRequest = { expanded = false },
+                                                Modifier.background(Color.White)
+                                            ) {
+                                                DropdownMenuItem(
+                                                    text = { Text("Delete Account") },
+                                                    onClick = {
+                                                        expanded = false
+                                                        dialogAction = "Delete Account"
+                                                        showDialog = true
+                                                    }
+                                                )
+                                                DropdownMenuItem(
+                                                    text = { Text("Logout", color = Color.Black) },
+                                                    onClick = {
+                                                        expanded = false
+                                                        dialogAction = "Logout"
+                                                        showDialog = true
+                                                    }
+                                                )
+                                                DropdownMenuItem(
+                                                    text = {
+                                                        Text(
+                                                            "Settings",
+                                                            color = Color.Black
+                                                        )
+                                                    },
+                                                    onClick = {
+                                                        expanded = false
+                                                        navController.navigate(NavigationGraph.SETTINGS_SCREEN.route)
+                                                        appBarTitle = "Settings"
+                                                        navigationKey++
+
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
-                            }
+                            )
+                        }
+                    }
+                }
+            },
+            content = { innerPadding ->
+                if (deleteUserState.isLoading || uiState.isLoading) {
+                    Column(
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.Black),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        LoadingLottie(R.raw.loading_lottie)
+                    }
+                } else {
+                    Column(
+                        Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                            .background(Color.Black)
+                    ) {
+                        RsrvNavigation(
+                            navController = navController,
+                            onTitleChange = { newTitle ->
+                                appBarTitle = newTitle
+                            },
+                            key = navigationKey
                         )
                     }
                 }
             }
-        },
-        content = { innerPadding ->
-            if (deleteUserState.isLoading || uiState.isLoading) {
-                Column(
-                    Modifier
-                        .fillMaxSize()
-                        .background(Color.Black),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    LoadingLottie(R.raw.loading_lottie)
-                }
-            } else {
-                Column(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .background(Color.Black)
-                ) {
-                    RsrvNavigation(
-                        navController = navController,
-                        onTitleChange = { newTitle ->
-                            appBarTitle = newTitle
-                        },
-                        key = navigationKey
-                    )
-                }
-            }
-        }
-    )
+        )
+    }
 }
-
 
 private fun goToLogin(loginViewModel: LoginViewModel, navHostController: NavHostController) {
     loginViewModel.signOut()
