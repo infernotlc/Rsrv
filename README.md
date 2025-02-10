@@ -18,15 +18,15 @@ https://drive.google.com/file/d/1K_UbTClfNRs3TlYI3QfC7rusKMr2XQje/view?usp=shari
 Next Features:
 - Show reservations for admins and visitors
 - Admins and visitors can cancel reservations
--Settings screen
--More information about places
--Save places by country and city, approve them to show their places
--Fetch places by country and city
--Take comments for places
--Punishment system for non made visits (after 30 minutes of reservation can be automatically cancel)
--If made more than 5 cancel account will be deleted
--Notifications for admins and users
--Reports for admins daily, weekly, monthly
+- Settings screen
+- More information about places
+- Save places by country and city, approve them to show their places
+- Fetch places by country and city
+- Take comments for places
+- Punishment system for non made visits (after 30 minutes of reservation can be automatically cancel)
+- If made more than 5 cancel account will be deleted
+- Notifications for admins and users
+- Reports for admins daily, weekly, monthly
 
 
 Admin Dashboard:
