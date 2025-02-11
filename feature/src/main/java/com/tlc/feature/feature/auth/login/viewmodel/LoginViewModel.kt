@@ -78,6 +78,11 @@ class LoginViewModel @Inject constructor(
                             user = null,
                             isLoading = false
                         )
+                        _loggingState.value = _loggingState.value.copy(
+                            transaction = true,
+                            isLoading = false,
+
+                        )
                     }
 
                     is RootResult.Error -> {
@@ -107,6 +112,10 @@ class LoginViewModel @Inject constructor(
                                 isLoading = false,
                                 transaction = true,
                                 data = role
+                            )
+                            _uiState.value = _uiState.value.copy(
+                                user = user,
+                                role = role
                             )
                         } else {
                             _loggingState.value = _loggingState.value.copy(
