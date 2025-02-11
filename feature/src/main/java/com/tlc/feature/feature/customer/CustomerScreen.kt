@@ -39,7 +39,9 @@ import com.tlc.domain.model.firebase.DesignItem
 import com.tlc.domain.model.firebase.Place
 import com.tlc.domain.model.firebase.Reservation
 import com.tlc.domain.utils.RootResult
+import com.tlc.feature.feature.auth.login.viewmodel.LoginViewModel
 import com.tlc.feature.feature.customer.viewmodel.CustomerViewModel
+import com.tlc.feature.navigation.NavigationGraph
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
@@ -51,12 +53,15 @@ import java.util.Locale
 fun CustomerScreen(
     navController: NavHostController,
     viewModel: CustomerViewModel = hiltViewModel(),
+    loginViewModel: LoginViewModel = hiltViewModel()
 ) {
     val placesState by viewModel.placeState.collectAsState()
     val designState by viewModel.designState.collectAsState()
     val reservationsState by viewModel.reservationsState.collectAsState()
     var showDesignPreview by remember { mutableStateOf(false) }
     var selectedPlaceId by remember { mutableStateOf<String?>(null) }
+
+    val isLoggedIn = loginViewModel.loggingState.collectAsState()
 
 
     LaunchedEffect(Unit) {
@@ -159,13 +164,25 @@ fun CustomerScreen(
                                     PlaceItem(
                                         place = place,
                                         onClick = {
-                                            selectedPlaceId = place.id
-                                            viewModel.fetchDesign(place.id)
-                                            val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(
-                                                Date()
-                                            )
-                                            viewModel.fetchReservations(place.id, date = currentDate)
-                                            showDesignPreview = true
+                                            if (isLoggedIn.value.transaction) {
+                                                selectedPlaceId = place.id
+                                                viewModel.fetchDesign(place.id)
+                                                val currentDate = SimpleDateFormat(
+                                                    "yyyy-MM-dd",
+                                                    Locale.getDefault()
+                                                ).format(
+                                                    Date()
+                                                )
+                                                viewModel.fetchReservations(
+                                                    place.id,
+                                                    date = currentDate
+                                                )
+                                                showDesignPreview = true
+
+                                            } else {
+                                                navController.navigate(NavigationGraph.LOGIN.route)
+
+                                            }
                                         }
                                     )
                                 }
@@ -208,7 +225,6 @@ fun PlaceItem(place: Place, onClick: () -> Unit) {
 }
 
 
-
 @Composable
 fun DesignPreview(
     designItems: List<DesignItem>,
@@ -228,7 +244,8 @@ fun DesignPreview(
 
 // Instead of filtering out reserved tables, ensure only available ones are selectable
     // If there are no reservations, show all tables
-    val availableDesignItems = designItems.filter { it.type == "TABLE" && it.designId !in reservedTableIds }
+    val availableDesignItems =
+        designItems.filter { it.type == "TABLE" && it.designId !in reservedTableIds }
 
     Box(
         modifier = Modifier
