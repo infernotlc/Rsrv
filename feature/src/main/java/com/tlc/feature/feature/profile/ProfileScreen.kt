@@ -1,9 +1,9 @@
-package com.tlc.feature.feature.settings
+package com.tlc.feature.feature.profile
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 
 @Composable
-fun SettingsScreen(navController: NavHostController) {
+fun ProfileScreen(navController: NavHostController) {
 
 }
