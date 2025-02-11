@@ -81,28 +81,6 @@ fun MainScreen(
     var currentRoute by remember { mutableStateOf<String?>(null) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-
-//
-//    LaunchedEffect(loggingState) {
-//        Log.d("Navigation", "loggingState: $loggingState")
-//        Log.d("Navigation", "navController: $navController")
-//        Log.d("Navigation", "LOGIN route: ${NavigationGraph.LOGIN.route}")
-//        Log.d("Navigation", "PROFILE_SCREEN route: ${NavigationGraph.PROFILE_SCREEN.route}")
-//
-//        if (!loggingState.isLoading) {  // Ensure loading is finished
-//            if (!loggingState.transaction) {
-//                Log.d("Navigation", "Navigating to LOGIN screen")
-//                val loginRoute = NavigationGraph.LOGIN.route
-//                val profileRoute = NavigationGraph.PROFILE_SCREEN.route
-//
-//                navController.navigate(loginRoute) {
-//                    popUpTo(profileRoute) { inclusive = true }
-//                }
-//            }
-//        }
-//    }
-
-
     LaunchedEffect(navController) {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             currentRoute = destination.route
