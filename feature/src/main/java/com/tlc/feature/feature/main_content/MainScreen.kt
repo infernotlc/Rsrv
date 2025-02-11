@@ -149,7 +149,7 @@ fun MainScreen(
                         showDialog = false
                         when (dialogAction) {
                             "Logout" -> {
-                                loginViewModel.signOut()
+                                loginViewModel.signOut(navController)
                                 appBarTitle = null
                                 navigationKey++
                             }
@@ -229,6 +229,7 @@ fun MainScreen(
                                     if (title == "Customer Screen" || title == "Admin Screen" || title == "Save Your Rsrv") {
                                         IconButton(
                                             onClick = {
+                                                  loginViewModel.isLoggedIn()
                                                     if (loginViewModel.loggingState.value.transaction) {
                                                         navController.navigate(NavigationGraph.PROFILE_SCREEN.route)
                                                     } else {
