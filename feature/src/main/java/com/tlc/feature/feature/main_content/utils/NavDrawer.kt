@@ -35,7 +35,10 @@ import com.tlc.feature.feature.auth.login.viewmodel.LoginViewModel
 import com.tlc.feature.navigation.NavigationGraph
 
 @Composable
-fun NavDrawer(navController: NavHostController, onClose: () -> Unit) {
+fun NavDrawer(
+    navController: NavHostController,
+    onClose: () -> Unit,
+    onLogout : () -> Unit) {
 
     val loginViewModel : LoginViewModel = hiltViewModel()
     LaunchedEffect(true) {
@@ -58,8 +61,8 @@ fun NavDrawer(navController: NavHostController, onClose: () -> Unit) {
 
         HorizontalDivider(color = Color.Black)
 
-        // Navigation Items
-        val menuItems = listOf("Home", "Settings", "Logout")
+
+        val menuItems = listOf("Home", "Search", "Saved", "My Reservations", "Notifications","Settings","Logout")
         menuItems.forEach { item ->
             NavigationDrawerItem(
                 label = { Text(text = item, color = Color.White) },
@@ -68,10 +71,11 @@ fun NavDrawer(navController: NavHostController, onClose: () -> Unit) {
                     onClose()
                     when (item) {
                         "Home" -> navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route)
-                        "Settings" -> navController.navigate(NavigationGraph.SETTINGS_SCREEN.route)
+                        "Profile" -> navController.navigate(NavigationGraph.PROFILE_SCREEN.route)
                         "Logout" -> {
-                            // Handle logout logic here
+                            onLogout()
                         }
+
                     }
                 },
                 icon = {
@@ -94,3 +98,4 @@ fun NavDrawer(navController: NavHostController, onClose: () -> Unit) {
         }
     }
 }
+
