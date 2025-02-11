@@ -33,7 +33,8 @@ fun RsrvNavigation(
     navController: NavHostController,
     mainViewModel: MainViewModel = hiltViewModel(),
     onTitleChange: (String) -> Unit,
-    key: Int
+    key: Int,
+    onLogout: () -> Unit
 ) {
     LaunchedEffect(mainViewModel.startDestination) {
         if (!mainViewModel.isLoading) {
@@ -111,7 +112,7 @@ fun RsrvNavigation(
             }
 
             composable(NavigationGraph.PROFILE_SCREEN.route) {
-                ProfileScreen(navController)
+                ProfileScreen(navController, onLogout)
                 onTitleChange("Profile")
             }
         }
