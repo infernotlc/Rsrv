@@ -1,6 +1,7 @@
 package com.tlc.feature.feature.main_content
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +57,7 @@ import com.tlc.feature.feature.main_content.utils.NavDrawer
 import com.tlc.feature.feature.main_content.viewmodel.MainContentViewModel
 import com.tlc.feature.navigation.NavigationGraph
 import com.tlc.feature.navigation.RsrvNavigation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,6 +70,7 @@ fun MainScreen(
 ) {
     val deleteUserState by mainContentViewModel.deleteUserState.collectAsState()
     val uiState by loginViewModel.uiState.collectAsState()
+    val loggingState by loginViewModel.loggingState.collectAsState()
 
     var appBarTitle by remember { mutableStateOf<String?>(null) }
     var showDialog by remember { mutableStateOf(false) }
@@ -79,11 +82,34 @@ fun MainScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
+//
+//    LaunchedEffect(loggingState) {
+//        Log.d("Navigation", "loggingState: $loggingState")
+//        Log.d("Navigation", "navController: $navController")
+//        Log.d("Navigation", "LOGIN route: ${NavigationGraph.LOGIN.route}")
+//        Log.d("Navigation", "PROFILE_SCREEN route: ${NavigationGraph.PROFILE_SCREEN.route}")
+//
+//        if (!loggingState.isLoading) {  // Ensure loading is finished
+//            if (!loggingState.transaction) {
+//                Log.d("Navigation", "Navigating to LOGIN screen")
+//                val loginRoute = NavigationGraph.LOGIN.route
+//                val profileRoute = NavigationGraph.PROFILE_SCREEN.route
+//
+//                navController.navigate(loginRoute) {
+//                    popUpTo(profileRoute) { inclusive = true }
+//                }
+//            }
+//        }
+//    }
+
+
     LaunchedEffect(navController) {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             currentRoute = destination.route
         }
     }
+
+
 
     LaunchedEffect(true) {
         loginViewModel.isLoggedIn()
@@ -92,7 +118,6 @@ fun MainScreen(
     LaunchedEffect(deleteUserState.transaction) {
         if (deleteUserState.transaction) {
             goToLogin(
-                loginViewModel = loginViewModel,
                 navHostController = navController
             )
             appBarTitle = null
@@ -124,10 +149,7 @@ fun MainScreen(
                         showDialog = false
                         when (dialogAction) {
                             "Logout" -> {
-                                goToLogin(
-                                    loginViewModel = loginViewModel,
-                                    navHostController = navController
-                                )
+                                loginViewModel.signOut()
                                 appBarTitle = null
                                 navigationKey++
                             }
@@ -168,7 +190,6 @@ fun MainScreen(
             })
         })
     {
-
         Scaffold(
             containerColor = Color.Black,
             topBar = {
@@ -193,7 +214,7 @@ fun MainScreen(
                                     )
                                 },
                                 navigationIcon = {
-                                    if (title != "Customer Screen" && title != "Admin Screen" && title != "Login Screen" && title != "Register Screen" && title != "Forget Password Screen") {
+                                    if (title != "Customer Screen" && title != "Admin Screen") {
                                         IconButton(onClick = { navController.navigateUp() }) {
                                             Icon(
                                                 painter = painterResource(R.drawable.ic_left),
@@ -205,15 +226,20 @@ fun MainScreen(
                                     }
                                 },
                                 actions = {
-                                    if (title == "Customer Screen" || title == "Admin Screen" || title == "Save Your Rsrv" ) {
+                                    if (title == "Customer Screen" || title == "Admin Screen" || title == "Save Your Rsrv") {
                                         IconButton(
                                             onClick = {
-                                                navController.navigate( NavigationGraph.PROFILE_SCREEN.route)
-                                            }
-                                        )
-                                        {
+                                                    if (loginViewModel.loggingState.value.transaction) {
+                                                        navController.navigate(NavigationGraph.PROFILE_SCREEN.route)
+                                                    } else {
+                                                        navController.navigate(NavigationGraph.LOGIN.route)
+                                                    }
+                                                }
+                                        ) {
                                             Icon(
-                                                painter = painterResource(id = R.drawable.ic_hide_password),
+                                                painter = painterResource(
+                                                    id = R.drawable.ic_left
+                                                ),
                                                 contentDescription = "Settings",
                                                 tint = Color.White,
                                                 modifier = Modifier.size(30.dp)
@@ -257,10 +283,10 @@ fun MainScreen(
         )
     }
 }
-private fun goToLogin(loginViewModel: LoginViewModel, navHostController: NavHostController) {
-    loginViewModel.signOut()
+
+private fun goToLogin( navHostController: NavHostController) {
     navHostController.navigate(NavigationGraph.LOGIN.route) {
-        popUpTo(NavigationGraph.LOGIN.route) {
+        popUpTo(NavigationGraph.CUSTOMER_SCREEN.route) {
             inclusive = true
         }
     }
