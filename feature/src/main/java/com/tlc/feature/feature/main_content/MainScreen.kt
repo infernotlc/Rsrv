@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -25,8 +25,10 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -44,6 +46,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.tlc.feature.R
 import com.tlc.feature.feature.auth.login.viewmodel.LoginViewModel
@@ -155,13 +158,17 @@ fun MainScreen(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            NavDrawer(navController) {
+            NavDrawer(navController, onClose = {
                 scope.launch {
                     drawerState.close()
                 }
-            }
-        }
-    ) {
+            }, onLogout = {
+                showDialog = true
+                dialogAction = "Logout"
+            })
+        })
+    {
+
         Scaffold(
             containerColor = Color.Black,
             topBar = {
@@ -198,58 +205,19 @@ fun MainScreen(
                                     }
                                 },
                                 actions = {
-                                    if (title == "Customer Screen" || title == "Admin Screen" || title == "Save Your Rsrv") {
-                                        var expanded by remember { mutableStateOf(false) }
-                                        IconButton(onClick = { expanded = !expanded }) {
+                                    if (title == "Customer Screen" || title == "Admin Screen" || title == "Save Your Rsrv" ) {
+                                        IconButton(
+                                            onClick = {
+                                                navController.navigate( NavigationGraph.PROFILE_SCREEN.route)
+                                            }
+                                        )
+                                        {
                                             Icon(
-                                                painter = painterResource(id = R.drawable.ic_vert),
+                                                painter = painterResource(id = R.drawable.ic_hide_password),
                                                 contentDescription = "Settings",
                                                 tint = Color.White,
                                                 modifier = Modifier.size(30.dp)
                                             )
-                                        }
-                                        MaterialTheme(
-                                            shapes = MaterialTheme.shapes.copy(
-                                                extraSmall = RoundedCornerShape(16.dp)
-                                            )
-                                        ) {
-                                            DropdownMenu(
-                                                expanded = expanded,
-                                                onDismissRequest = { expanded = false },
-                                                Modifier.background(Color.White)
-                                            ) {
-                                                DropdownMenuItem(
-                                                    text = { Text("Delete Account") },
-                                                    onClick = {
-                                                        expanded = false
-                                                        dialogAction = "Delete Account"
-                                                        showDialog = true
-                                                    }
-                                                )
-                                                DropdownMenuItem(
-                                                    text = { Text("Logout", color = Color.Black) },
-                                                    onClick = {
-                                                        expanded = false
-                                                        dialogAction = "Logout"
-                                                        showDialog = true
-                                                    }
-                                                )
-                                                DropdownMenuItem(
-                                                    text = {
-                                                        Text(
-                                                            "Settings",
-                                                            color = Color.Black
-                                                        )
-                                                    },
-                                                    onClick = {
-                                                        expanded = false
-                                                        navController.navigate(NavigationGraph.SETTINGS_SCREEN.route)
-                                                        appBarTitle = "Settings"
-                                                        navigationKey++
-
-                                                    }
-                                                )
-                                            }
                                         }
                                     }
                                 }
@@ -289,7 +257,6 @@ fun MainScreen(
         )
     }
 }
-
 private fun goToLogin(loginViewModel: LoginViewModel, navHostController: NavHostController) {
     loginViewModel.signOut()
     navHostController.navigate(NavigationGraph.LOGIN.route) {
