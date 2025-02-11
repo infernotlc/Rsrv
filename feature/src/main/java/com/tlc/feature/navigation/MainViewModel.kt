@@ -28,7 +28,7 @@ class MainViewModel @Inject constructor(
                 startDestination = if (appEntry) {
                     NavigationGraph.IS_LOGGED_IN.route
                 } else {
-                    NavigationGraph.LOGIN.route
+                    NavigationGraph.IS_LOGGED_IN.route
                 }
                 isLoading = false
             }

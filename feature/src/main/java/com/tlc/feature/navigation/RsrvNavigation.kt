@@ -24,7 +24,7 @@ import com.tlc.feature.feature.component.LoadingLottie
 import com.tlc.feature.feature.customer.CustomerScreen
 import com.tlc.feature.feature.design.DesignScreen
 import com.tlc.feature.feature.reservation.SaveReservationScreen
-import com.tlc.feature.feature.settings.SettingsScreen
+import com.tlc.feature.feature.profile.ProfileScreen
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -110,9 +110,9 @@ fun RsrvNavigation(
                 onTitleChange("Save Your Rsrv")
             }
 
-            composable(NavigationGraph.SETTINGS_SCREEN.route) {
-                SettingsScreen(navController)
-                onTitleChange("Settings")
+            composable(NavigationGraph.PROFILE_SCREEN.route) {
+                ProfileScreen(navController)
+                onTitleChange("Profile")
             }
         }
     }

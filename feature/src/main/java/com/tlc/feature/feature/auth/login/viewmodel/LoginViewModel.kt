@@ -3,6 +3,7 @@ package com.tlc.feature.feature.auth.login.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavHostController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.tlc.data.ui.repository.firebase.AuthRepositoryImpl
@@ -13,6 +14,7 @@ import com.tlc.domain.use_cases.firebase_use_cases.auth.SignOutUseCase
 import com.tlc.domain.utils.RootResult
 import com.tlc.feature.feature.auth.login.state.IsLoggedInState
 import com.tlc.feature.feature.auth.login.state.LoginUiState
+import com.tlc.feature.navigation.NavigationGraph
 import com.tlc.feature.navigation.main_datastore.MainDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,7 +70,7 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    internal fun signOut() {
+    internal fun signOut(navController: NavHostController) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             signOutUseCase().collect { result ->
@@ -76,13 +78,22 @@ class LoginViewModel @Inject constructor(
                     is RootResult.Success -> {
                         _uiState.value = _uiState.value.copy(
                             user = null,
+                            role = null,
                             isLoading = false
                         )
+                        _loggingState.value = _loggingState.value.copy(
+                            transaction = false, // Mark user as logged out
+                            isLoading = false,
+                            data = null
+                        )
+
+                        navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
+                            popUpTo(NavigationGraph.CUSTOMER_SCREEN.route) { inclusive = true }
+                        }
                     }
 
                     is RootResult.Error -> {
-                        _uiState.value =
-                            _uiState.value.copy(error = result.message, isLoading = false)
+                        _uiState.value = _uiState.value.copy(error = result.message, isLoading = false)
                     }
 
                     RootResult.Loading -> {
@@ -93,6 +104,7 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+
     fun isLoggedIn() {
         _loggingState.value = _loggingState.value.copy(isLoading = true)
 
@@ -102,11 +114,15 @@ class LoginViewModel @Inject constructor(
                     is RootResult.Success -> {
                         val user = FirebaseAuth.getInstance().currentUser
                         if (user != null) {
-                            val role = authRepository.getUserRole(user.uid)
+                            val role = result.data
                             _loggingState.value = _loggingState.value.copy(
                                 isLoading = false,
                                 transaction = true,
-                                data = role
+                                data = role.toString()
+                            )
+                            _uiState.value = _uiState.value.copy(
+                                user = user,
+                                role = role.toString()
                             )
                         } else {
                             _loggingState.value = _loggingState.value.copy(

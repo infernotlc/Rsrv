@@ -43,8 +43,8 @@ fun IsLoggedInScreen(navController: NavController, viewModel: LoginViewModel = h
                     }
                 }
                 else -> {
-                    navController.navigate(NavigationGraph.LOGIN.route) {
-                        popUpTo(NavigationGraph.LOGIN.route) {
+                    navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
+                        popUpTo(NavigationGraph.CUSTOMER_SCREEN.route) {
                             inclusive = true
                         }
                     }

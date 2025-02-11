@@ -40,7 +40,6 @@ import com.tlc.feature.feature.reservation.util.PhoneNumber
 import com.tlc.feature.feature.reservation.util.RsrvCountDropdown
 import com.tlc.feature.feature.reservation.viewmodel.ReservationUiState
 import com.tlc.feature.feature.reservation.viewmodel.SaveReservationViewModel
-import kotlinx.coroutines.flow.forEach
 
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("StateFlowValueCalledInComposition")
