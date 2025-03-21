@@ -17,6 +17,7 @@ import com.tlc.feature.feature.auth.login.state.LoginUiState
 import com.tlc.feature.navigation.NavigationGraph
 import com.tlc.feature.navigation.main_datastore.MainDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -36,8 +37,21 @@ class LoginViewModel @Inject constructor(
     private val _loggingState = MutableStateFlow(IsLoggedInState())
     val loggingState: StateFlow<IsLoggedInState> = _loggingState
 
+    private var _hasCheckedLogin = false
+    val hasCheckedLogin get() = _hasCheckedLogin
+    private var isCheckingLogin = false
+    private var isInitialized = false
+    private var isNavigating = false
+
     init {
-        isLoggedIn()
+        Log.d("LoginViewModel", "Initializing LoginViewModel")
+        viewModelScope.launch {
+            if (!isInitialized && !_hasCheckedLogin && !isCheckingLogin) {
+                isInitialized = true
+                delay(100) // Add a small delay to prevent race conditions
+                isLoggedIn()
+            }
+        }
     }
 
     internal fun signIn(email: String, password: String) {
@@ -53,6 +67,7 @@ class LoginViewModel @Inject constructor(
                             role = role,
                             isLoading = false
                         )
+                        _hasCheckedLogin = true
                     }
 
                     is RootResult.Error -> {
@@ -71,7 +86,13 @@ class LoginViewModel @Inject constructor(
     }
 
     internal fun signOut(navController: NavHostController) {
+        if (isNavigating) {
+            Log.d("LoginViewModel", "Navigation already in progress, skipping")
+            return
+        }
+
         viewModelScope.launch {
+            isNavigating = true
             _uiState.value = _uiState.value.copy(isLoading = true)
             signOutUseCase().collect { result ->
                 when (result) {
@@ -82,18 +103,25 @@ class LoginViewModel @Inject constructor(
                             isLoading = false
                         )
                         _loggingState.value = _loggingState.value.copy(
-                            transaction = false, // Mark user as logged out
+                            transaction = false,
                             isLoading = false,
                             data = null
                         )
+                        _hasCheckedLogin = false
+                        isCheckingLogin = false
+                        isInitialized = false
 
+                        Log.d("LoginViewModel", "Signing out, navigating to customer screen")
                         navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
-                            popUpTo(NavigationGraph.CUSTOMER_SCREEN.route) { inclusive = true }
+                            popUpTo(0) { inclusive = true }
                         }
+                        delay(100) // Add a small delay before allowing navigation again
+                        isNavigating = false
                     }
 
                     is RootResult.Error -> {
                         _uiState.value = _uiState.value.copy(error = result.message, isLoading = false)
+                        isNavigating = false
                     }
 
                     RootResult.Loading -> {
@@ -104,8 +132,14 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-
     fun isLoggedIn() {
+        if (_loggingState.value.isLoading || isCheckingLogin || _hasCheckedLogin) {
+            Log.d("LoginViewModel", "Already checked login status or checking in progress, skipping")
+            return
+        }
+        
+        Log.d("LoginViewModel", "Starting login check")
+        isCheckingLogin = true
         _loggingState.value = _loggingState.value.copy(isLoading = true)
 
         viewModelScope.launch {
@@ -113,31 +147,37 @@ class LoginViewModel @Inject constructor(
                 when (result) {
                     is RootResult.Success -> {
                         val user = FirebaseAuth.getInstance().currentUser
-                        if (user != null) {
-                            val role = result.data
+                        val role = result.data
+                        if (user != null && role != null) {
+                            Log.d("LoginViewModel", "User is logged in with role: $role")
                             _loggingState.value = _loggingState.value.copy(
                                 isLoading = false,
                                 transaction = true,
-                                data = role.toString()
+                                data = role
                             )
                             _uiState.value = _uiState.value.copy(
                                 user = user,
-                                role = role.toString()
+                                role = role
                             )
                         } else {
+                            Log.d("LoginViewModel", "No user found or no role")
                             _loggingState.value = _loggingState.value.copy(
                                 isLoading = false,
                                 transaction = false,
                                 data = null
                             )
                         }
+                        isCheckingLogin = false
+                        _hasCheckedLogin = true
                     }
 
                     is RootResult.Error -> {
+                        Log.e("LoginViewModel", "Error checking login status: ${result.message}")
                         _loggingState.value = _loggingState.value.copy(
                             isLoading = false,
                             error = result.message
                         )
+                        isCheckingLogin = false
                     }
 
                     RootResult.Loading -> {
