@@ -28,11 +28,9 @@ fun ProfileScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Profile content here
-        
+
         Spacer(modifier = Modifier.weight(1f))
         
-        // Logout button at the bottom
         AuthButtonComponent(
             value = "Logout",
             onClick = { showLogoutDialog = true },
