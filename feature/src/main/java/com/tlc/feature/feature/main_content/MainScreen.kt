@@ -293,15 +293,15 @@ fun MainScreen(
                                             onClick = {
                                                 Log.d("MainScreen", "Profile button clicked, logged in: ${loggingState.transaction}")
                                                 if (loggingState.transaction) {
-                                                    navController.navigate(NavigationGraph.PROFILE_SCREEN.route)
-                                                } else {
-                                                    navController.navigate(NavigationGraph.LOGIN.route)
+                                                    navController.navigate(NavigationGraph.PROFILE_SCREEN.route) {
+                                                        popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
+                                                    }
                                                 }
                                             }
                                         ) {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.ic_left),
-                                                contentDescription = "Settings",
+                                                contentDescription = "Profile",
                                                 tint = Color.White,
                                                 modifier = Modifier.size(30.dp)
                                             )
@@ -383,15 +383,15 @@ fun MainScreen(
                                         onClick = {
                                             Log.d("MainScreen", "Profile button clicked, logged in: ${loggingState.transaction}")
                                             if (loggingState.transaction) {
-                                                navController.navigate(NavigationGraph.PROFILE_SCREEN.route)
-                                            } else {
-                                                navController.navigate(NavigationGraph.LOGIN.route)
+                                                navController.navigate(NavigationGraph.PROFILE_SCREEN.route) {
+                                                    popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
+                                                }
                                             }
                                         }
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.ic_left),
-                                            contentDescription = "Settings",
+                                            contentDescription = "Profile",
                                             tint = Color.White,
                                             modifier = Modifier.size(30.dp)
                                         )
