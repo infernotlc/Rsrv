@@ -48,7 +48,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "StateFlowValueCalledInComposition")
 @Composable
 fun CustomerScreen(
     navController: NavHostController,
@@ -60,9 +60,10 @@ fun CustomerScreen(
     val reservationsState by viewModel.reservationsState.collectAsState()
     var showDesignPreview by remember { mutableStateOf(false) }
     var selectedPlaceId by remember { mutableStateOf<String?>(null) }
+    var selectedPlace by remember { mutableStateOf<Place?>(null) }
 
     val isLoggedIn = loginViewModel.loggingState.collectAsState()
-
+    val role = loginViewModel.loggingState.value.data
 
     LaunchedEffect(Unit) {
         Log.d("CustomerScreen", "LaunchedEffect triggered, fetching places")
@@ -78,23 +79,6 @@ fun CustomerScreen(
                         .background(Color.White)
                 ) {
                     Column {
-                        //                        IconButton(
-                        //                            onClick = {
-                        //                                Log.d(
-                        //                                    "CustomerScreen",
-                        //                                    "Back button clicked, closing design preview"
-                        //                                )
-                        //                                showDesignPreview = false
-                        //                            },
-                        //                            modifier = Modifier.padding(16.dp)
-                        //                        ) {
-                        //                            Icon(
-                        //                                imageVector = Icons.Default.ArrowBack,
-                        //                                contentDescription = "Back",
-                        //                                tint = Color.Black
-                        //                            )
-                        //                        }
-
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -121,10 +105,8 @@ fun CustomerScreen(
                                             }
                                         },
                                         reservations = reservationsState
-
                                     )
                                 }
-
 
                                 is RootResult.Error -> {
                                     val errorMessage =
@@ -164,24 +146,29 @@ fun CustomerScreen(
                                     PlaceItem(
                                         place = place,
                                         onClick = {
+                                            selectedPlaceId = place.id
+                                            selectedPlace = place
+                                            
                                             if (isLoggedIn.value.transaction) {
-                                                selectedPlaceId = place.id
-                                                viewModel.fetchDesign(place.id)
-                                                val currentDate = SimpleDateFormat(
-                                                    "yyyy-MM-dd",
-                                                    Locale.getDefault()
-                                                ).format(
-                                                    Date()
-                                                )
-                                                viewModel.fetchReservations(
-                                                    place.id,
-                                                    date = currentDate
-                                                )
-                                                showDesignPreview = true
-
+                                                // If logged in as admin, navigate to admin screen
+                                                if (role == "admin") {
+                                                    navController.navigate(NavigationGraph.ADMIN_SCREEN.route)
+                                                } else {
+                                                    // If logged in as customer, show design
+                                                    viewModel.fetchDesign(place.id)
+                                                    val currentDate = SimpleDateFormat(
+                                                        "yyyy-MM-dd",
+                                                        Locale.getDefault()
+                                                    ).format(Date())
+                                                    viewModel.fetchReservations(
+                                                        place.id,
+                                                        date = currentDate
+                                                    )
+                                                    showDesignPreview = true
+                                                }
                                             } else {
+                                                // If not logged in, navigate to login
                                                 navController.navigate(NavigationGraph.LOGIN.route)
-
                                             }
                                         }
                                     )
