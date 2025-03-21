@@ -76,31 +76,93 @@ fun MainScreen(
     var showDialog by remember { mutableStateOf(false) }
     var dialogAction by remember { mutableStateOf("") }
     var navigationKey by remember { mutableIntStateOf(0) }
+    var lastRoute by remember { mutableStateOf<String?>(null) }
+    var currentRoute by remember { mutableStateOf<String?>(null) }
+    var isNavigating by remember { mutableStateOf(false) }
+    var lastNavigationTime by remember { mutableStateOf(0L) }
+    var isInitialNavigation by remember { mutableStateOf(true) }
     val context = LocalContext.current
 
-    var currentRoute by remember { mutableStateOf<String?>(null) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    
     LaunchedEffect(navController) {
+        // Initial navigation based on user role
+        if (isInitialNavigation) {
+            isInitialNavigation = false
+            try {
+                // First check login status
+                loginViewModel.isLoggedIn()
+                
+                // Wait until login check is complete
+                while (loginViewModel.loggingState.value.isLoading || !loginViewModel.hasCheckedLogin) {
+                    delay(100)
+                }
+                
+                val role = loginViewModel.loggingState.value.data
+                val isLoggedIn = loginViewModel.loggingState.value.transaction
+                
+                Log.d("MainScreen", "Initial navigation - Role: $role, IsLoggedIn: $isLoggedIn")
+                
+                // Only navigate to admin screen if user is logged in as admin
+                if (isLoggedIn && role == "admin") {
+                    Log.d("MainScreen", "User is admin, navigating to admin screen")
+                    navController.navigate(NavigationGraph.ADMIN_SCREEN.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                } else {
+                    // For all other cases (not logged in, or logged in as customer), show customer screen
+                    Log.d("MainScreen", "Showing customer screen")
+                    navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MainScreen", "Error during initial navigation", e)
+                // Fallback to customer screen in case of error
+                navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        }
+
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            currentRoute = destination.route
+            val currentTime = System.currentTimeMillis()
+            if (destination.route != lastRoute && !isNavigating && (currentTime - lastNavigationTime) > 500) {
+                Log.d("MainScreen", "Destination changed to: ${destination.route}")
+                lastRoute = destination.route
+                currentRoute = destination.route
+                lastNavigationTime = currentTime
+            }
         }
     }
 
-
-
-    LaunchedEffect(true) {
-        loginViewModel.isLoggedIn()
+    // Handle logout navigation
+    LaunchedEffect(loggingState.transaction) {
+        if (!loggingState.transaction && !isNavigating) {
+            // When logged out, navigate to customer screen
+            Log.d("MainScreen", "User logged out, navigating to customer screen")
+            isNavigating = true
+            navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
+                popUpTo(0) { inclusive = true }
+            }
+            delay(500)
+            isNavigating = false
+        }
     }
 
     LaunchedEffect(deleteUserState.transaction) {
-        if (deleteUserState.transaction) {
-            goToLogin(
-                navHostController = navController
-            )
+        if (deleteUserState.transaction && !isNavigating) {
+            Log.d("MainScreen", "User deleted, navigating to login")
+            isNavigating = true
+            goToLogin(navHostController = navController)
             appBarTitle = null
             navigationKey++
             Toast.makeText(context, "User deleted successfully", Toast.LENGTH_SHORT).show()
+            scope.launch {
+                delay(500)
+                isNavigating = false
+            }
         }
     }
 
@@ -127,11 +189,18 @@ fun MainScreen(
                         showDialog = false
                         when (dialogAction) {
                             "Logout" -> {
-                                loginViewModel.signOut(navController)
-                                appBarTitle = null
-                                navigationKey++
+                                if (!isNavigating) {
+                                    Log.d("MainScreen", "Logging out user")
+                                    isNavigating = true
+                                    loginViewModel.signOut(navController)
+                                    appBarTitle = null
+                                    navigationKey++
+                                    scope.launch {
+                                        delay(500)
+                                        isNavigating = false
+                                    }
+                                }
                             }
-
                             "Delete Account" -> {
                                 mainContentViewModel.deleteUser()
                             }
@@ -155,23 +224,129 @@ fun MainScreen(
             }
         )
     }
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            NavDrawer(navController, onClose = {
-                scope.launch {
-                    drawerState.close()
+
+    val shouldShowNavDrawer = remember(currentRoute) {
+        val show = NavigationGraph.shouldShowNavigationDrawer(currentRoute ?: "")
+        Log.d("MainScreen", "Should show nav drawer: $show for route: $currentRoute")
+        show
+    }
+
+    val shouldShowTopBar = remember(currentRoute) {
+        val show = NavigationGraph.shouldShowTopBar(currentRoute ?: "")
+        Log.d("MainScreen", "Should show top bar: $show for route: $currentRoute")
+        show
+    }
+
+    if (shouldShowNavDrawer) {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                NavDrawer(navController, onClose = {
+                    scope.launch {
+                        drawerState.close()
+                    }
+                }, onLogout = {
+                    showDialog = true
+                    dialogAction = "Logout"
+                })
+            }
+        ) {
+            Scaffold(
+                containerColor = Color.Black,
+                topBar = {
+                    if (shouldShowTopBar) {
+                        appBarTitle?.let { title ->
+                            Box(modifier = Modifier.background(Color.Red)) {
+                                CenterAlignedTopAppBar(
+                                    colors = TopAppBarColors(
+                                        actionIconContentColor = Color.White,
+                                        containerColor = Color.Black,
+                                        navigationIconContentColor = Color.White,
+                                        scrolledContainerColor = Color.Red,
+                                        titleContentColor = Color.White
+                                    ),
+                                    title = {
+                                        Text(
+                                            text = title,
+                                            style = TextStyle(
+                                                color = Color.White,
+                                                fontSize = 25.sp
+                                            ),
+                                        )
+                                    },
+                                    navigationIcon = {
+                                        IconButton(onClick = {
+                                            scope.launch {
+                                                drawerState.open()
+                                            }
+                                        }) {
+                                            Icon(
+                                                painter = painterResource(R.drawable.ic_left),
+                                                contentDescription = "Menu",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(30.dp)
+                                            )
+                                        }
+                                    },
+                                    actions = {
+                                        IconButton(
+                                            onClick = {
+                                                Log.d("MainScreen", "Profile button clicked, logged in: ${loggingState.transaction}")
+                                                if (loggingState.transaction) {
+                                                    navController.navigate(NavigationGraph.PROFILE_SCREEN.route)
+                                                } else {
+                                                    navController.navigate(NavigationGraph.LOGIN.route)
+                                                }
+                                            }
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_left),
+                                                contentDescription = "Settings",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(30.dp)
+                                            )
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                },
+                content = { innerPadding ->
+                    if (deleteUserState.isLoading || uiState.isLoading) {
+                        Column(
+                            Modifier
+                                .fillMaxSize()
+                                .background(Color.Black),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            LoadingLottie(R.raw.loading_lottie)
+                        }
+                    } else {
+                        Column(
+                            Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding)
+                                .background(Color.Black)
+                        ) {
+                            RsrvNavigation(
+                                navController = navController,
+                                onTitleChange = { title ->
+                                    appBarTitle = title
+                                },
+                                key = navigationKey
+                            )
+                        }
+                    }
                 }
-            }, onLogout = {
-                showDialog = true
-                dialogAction = "Logout"
-            })
-        })
-    {
+            )
+        }
+    } else {
         Scaffold(
             containerColor = Color.Black,
             topBar = {
-                if (currentRoute != NavigationGraph.DESIGN_SCREEN.route) {
+                if (shouldShowTopBar) {
                     appBarTitle?.let { title ->
                         Box(modifier = Modifier.background(Color.Red)) {
                             CenterAlignedTopAppBar(
@@ -192,38 +367,34 @@ fun MainScreen(
                                     )
                                 },
                                 navigationIcon = {
-                                    if (title != "Customer Screen" && title != "Admin Screen") {
-                                        IconButton(onClick = { navController.navigateUp() }) {
-                                            Icon(
-                                                painter = painterResource(R.drawable.ic_left),
-                                                contentDescription = "Back",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(30.dp)
-                                            )
-                                        }
+                                    IconButton(onClick = {
+                                        navController.popBackStack()
+                                    }) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_left),
+                                            contentDescription = "Back",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(30.dp)
+                                        )
                                     }
                                 },
                                 actions = {
-                                    if (title == "Customer Screen" || title == "Admin Screen" || title == "Save Your Rsrv") {
-                                        IconButton(
-                                            onClick = {
-                                                  loginViewModel.isLoggedIn()
-                                                    if (loginViewModel.loggingState.value.transaction) {
-                                                        navController.navigate(NavigationGraph.PROFILE_SCREEN.route)
-                                                    } else {
-                                                        navController.navigate(NavigationGraph.LOGIN.route)
-                                                    }
-                                                }
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(
-                                                    id = R.drawable.ic_left
-                                                ),
-                                                contentDescription = "Settings",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(30.dp)
-                                            )
+                                    IconButton(
+                                        onClick = {
+                                            Log.d("MainScreen", "Profile button clicked, logged in: ${loggingState.transaction}")
+                                            if (loggingState.transaction) {
+                                                navController.navigate(NavigationGraph.PROFILE_SCREEN.route)
+                                            } else {
+                                                navController.navigate(NavigationGraph.LOGIN.route)
+                                            }
                                         }
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_left),
+                                            contentDescription = "Settings",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(30.dp)
+                                        )
                                     }
                                 }
                             )
@@ -251,8 +422,8 @@ fun MainScreen(
                     ) {
                         RsrvNavigation(
                             navController = navController,
-                            onTitleChange = { newTitle ->
-                                appBarTitle = newTitle
+                            onTitleChange = { title ->
+                                appBarTitle = title
                             },
                             key = navigationKey
                         )
@@ -263,9 +434,10 @@ fun MainScreen(
     }
 }
 
-private fun goToLogin( navHostController: NavHostController) {
+private fun goToLogin(navHostController: NavHostController) {
+    Log.d("MainScreen", "Navigating to login screen")
     navHostController.navigate(NavigationGraph.LOGIN.route) {
-        popUpTo(NavigationGraph.CUSTOMER_SCREEN.route) {
+        popUpTo(NavigationGraph.IS_LOGGED_IN.route) {
             inclusive = true
         }
     }

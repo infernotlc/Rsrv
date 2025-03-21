@@ -16,7 +16,7 @@ interface AuthRepository {
     ): Flow<RootResult<FirebaseUser>>
 
     fun signOut(): Flow<RootResult<Boolean>>
-    fun isLoggedIn(): Flow<RootResult<Boolean>>
+    fun isLoggedIn(): Flow<RootResult<String?>>
     fun sendPasswordResetEmail(email: String): Flow<RootResult<Boolean>>
     suspend fun deleteCurrentUser(): Flow<RootResult<Boolean>>
     suspend fun getUserRole(uid: String): String?

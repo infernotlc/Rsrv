@@ -83,14 +83,17 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    override fun isLoggedIn(): Flow<RootResult<Boolean>> = flow {
+    override fun isLoggedIn(): Flow<RootResult<String?>> = flow {
         emit(RootResult.Loading)
         try {
             val user = firebaseAuth.currentUser
             if (user != null) {
-                emit(RootResult.Success(true))
+                val role = getUserRole(user.uid)
+                Log.d("AuthRepositoryImpl", "User is logged in with role: $role")
+                emit(RootResult.Success(role))
             } else {
-                emit(RootResult.Success(false))
+                Log.d("AuthRepositoryImpl", "No user found")
+                emit(RootResult.Success(null))
             }
         } catch (e: Exception) {
             val errorMessage = e.message ?: "An unexpected error occurred while checking login status."

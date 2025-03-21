@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -11,6 +15,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.google.gson.Gson
 import com.tlc.domain.model.firebase.Place
@@ -35,15 +40,8 @@ fun RsrvNavigation(
     onTitleChange: (String) -> Unit,
     key: Int
 ) {
-    LaunchedEffect(mainViewModel.startDestination) {
-        if (!mainViewModel.isLoading) {
-            navController.navigate(mainViewModel.startDestination) {
-                popUpTo(navController.graph.startDestinationId) {
-                    inclusive = true
-                }
-            }
-        }
-    }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route ?: ""
 
     if (mainViewModel.isLoading) {
         Box(
@@ -51,69 +49,69 @@ fun RsrvNavigation(
         ) {
             LoadingLottie(resId = R.raw.loading_lottie)
         }
-    } else {
-        NavHost(
-            navController = navController, startDestination = mainViewModel.startDestination
-        ) {
-            composable(NavigationGraph.IS_LOGGED_IN.route) {
-                IsLoggedInScreen(navController)
+    }
+
+    NavHost(
+        navController = navController, startDestination = NavigationGraph.CUSTOMER_SCREEN.route
+    ) {
+        composable(NavigationGraph.IS_LOGGED_IN.route) {
+            IsLoggedInScreen(navController)
+        }
+        composable(NavigationGraph.LOGIN.route) {
+            LoginScreen(navController)
+            onTitleChange("Login Screen")
+        }
+        composable(NavigationGraph.REGISTER.route) {
+            RegisterScreen(navController)
+            onTitleChange("Register Screen")
+        }
+        composable(NavigationGraph.FORGOT_PASSWORD.route) {
+            ForgotPasswordScreen(navController)
+            onTitleChange("Forget Password Screen")
+        }
+        composable(NavigationGraph.ADMIN_SCREEN.route) {
+            AdminScreen(navController)
+            onTitleChange("Admin Screen")
+        }
+        composable(NavigationGraph.CUSTOMER_SCREEN.route) {
+            CustomerScreen(navController)
+            onTitleChange("Customer Screen")
+        }
+        composable(
+            route = NavigationGraph.DESIGN_SCREEN.route,
+            arguments = listOf(navArgument("placeData") {
+                type = NavType.StringType
+            })
+        ) { backStackEntry ->
+            val encodedPlaceJson = backStackEntry.arguments?.getString("placeData")
+            val placeJson = encodedPlaceJson?.let {
+                URLDecoder.decode(it, StandardCharsets.UTF_8.toString())
             }
-            composable(NavigationGraph.LOGIN.route) {
-                LoginScreen(navController)
-                onTitleChange("Login Screen")
-            }
-            composable(NavigationGraph.REGISTER.route) {
-                RegisterScreen(navController)
-                onTitleChange("Register Screen")
-            }
-            composable(NavigationGraph.FORGOT_PASSWORD.route) {
-                ForgotPasswordScreen(navController)
-                onTitleChange("Forget Password Screen")
-            }
-            composable(NavigationGraph.ADMIN_SCREEN.route) {
-                AdminScreen(navController)
-                onTitleChange("Admin Screen")
-            }
-            composable(NavigationGraph.CUSTOMER_SCREEN.route) {
-                CustomerScreen(navController)
-                onTitleChange("Customer Screen")
-            }
-            composable(
-                route = NavigationGraph.DESIGN_SCREEN.route,
-                arguments = listOf(navArgument("placeData") {
-                    type = NavType.StringType
-                })
-            ) { backStackEntry ->
-                val encodedPlaceJson = backStackEntry.arguments?.getString("placeData")
-                val placeJson = encodedPlaceJson?.let {
-                    URLDecoder.decode(it, StandardCharsets.UTF_8.toString())
-                }
-                val place = placeJson?.let { Gson().fromJson(it, Place::class.java) }
-                if (place != null) {
-                    DesignScreen(
-                        navController = navController, place = place, placeId = place.id
-                    )
-                }
+            val place = placeJson?.let { Gson().fromJson(it, Place::class.java) }
+            if (place != null) {
+                DesignScreen(
+                    navController = navController, place = place, placeId = place.id
+                )
                 onTitleChange("Design Screen")
             }
-            composable(
-                route = NavigationGraph.SAVE_RESERVATION_SCREEN.route, arguments = listOf(
-                    navArgument("placeId") { type = NavType.StringType },
-                    navArgument("tableId") { type = NavType.StringType },
-                )
-            ) { backStackEntry ->
-                val placeId = backStackEntry.arguments?.getString("placeId") ?: ""
-                val tableId = backStackEntry.arguments?.getString("tableId") ?: ""
+        }
+        composable(
+            route = NavigationGraph.SAVE_RESERVATION_SCREEN.route, arguments = listOf(
+                navArgument("placeId") { type = NavType.StringType },
+                navArgument("tableId") { type = NavType.StringType },
+            )
+        ) { backStackEntry ->
+            val placeId = backStackEntry.arguments?.getString("placeId") ?: ""
+            val tableId = backStackEntry.arguments?.getString("tableId") ?: ""
 
-                SaveReservationScreen(
-                    navController = navController, placeId = placeId, tableId = tableId)
-                onTitleChange("Save Your Rsrv")
-            }
+            SaveReservationScreen(
+                navController = navController, placeId = placeId, tableId = tableId)
+            onTitleChange("Save Your Rsrv")
+        }
 
-            composable(NavigationGraph.PROFILE_SCREEN.route) {
-                ProfileScreen(navController)
-                onTitleChange("Profile")
-            }
+        composable(NavigationGraph.PROFILE_SCREEN.route) {
+            ProfileScreen(navController)
+            onTitleChange("Profile")
         }
     }
 }
