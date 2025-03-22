@@ -130,7 +130,7 @@ import javax.inject.Inject
                             isInitialized = false
 
                             Log.d("LoginViewModel", "Sign out successful, navigating to login screen")
-                            navController.navigate(NavigationGraph.LOGIN.route) {
+                            navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
                                 popUpTo(0) { inclusive = true }
                             }
                             delay(100)
