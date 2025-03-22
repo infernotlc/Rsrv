@@ -63,7 +63,7 @@ fun NavDrawer(
         HorizontalDivider(color = Color.Black)
 
 
-        val menuItems = listOf("Home", "Search", "Saved", "My Reservations", "Notifications","Settings")
+        val menuItems = listOf("Home", "Search", "Favorites","Settings")
         menuItems.forEach { item ->
             NavigationDrawerItem(
                 label = { Text(text = item, color = Color.White) },
