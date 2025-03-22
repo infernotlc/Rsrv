@@ -145,7 +145,7 @@ fun MainScreen(
             Log.d("MainScreen", "User logged out, navigating to login screen")
             isNavigating = true
             loginViewModel.updateLoginState()
-            navController.navigate(NavigationGraph.LOGIN.route) {
+            navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
                 popUpTo(0) { inclusive = true }
             }
             delay(500)
@@ -160,7 +160,7 @@ fun MainScreen(
                 Log.d("MainScreen", "User logged out while on profile, navigating to login screen")
                 isNavigating = true
                 loginViewModel.updateLoginState()
-                navController.navigate(NavigationGraph.LOGIN.route) {
+                navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
                     popUpTo(0) { inclusive = true }
                 }
                 delay(500)
@@ -263,9 +263,6 @@ fun MainScreen(
                     scope.launch {
                         drawerState.close()
                     }
-                }, onLogout = {
-                    showDialog = true
-                    dialogAction = "Logout"
                 })
             }
         ) {
