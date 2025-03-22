@@ -296,7 +296,7 @@ fun MainScreen(
                                             }
                                         }) {
                                             Icon(
-                                                painter = painterResource(R.drawable.ic_left),
+                                                painter = painterResource(R.drawable.bar),
                                                 contentDescription = "Menu",
                                                 tint = Color.White,
                                                 modifier = Modifier.size(30.dp)
@@ -322,7 +322,7 @@ fun MainScreen(
                                             }
                                         ) {
                                             Icon(
-                                                painter = painterResource(id = R.drawable.ic_left),
+                                                painter = painterResource(id = R.drawable.baseline_accessibility_24),
                                                 contentDescription = "Profile",
                                                 tint = Color.White,
                                                 modifier = Modifier.size(30.dp)
@@ -420,7 +420,7 @@ fun MainScreen(
                                         }
                                     ) {
                                         Icon(
-                                            painter = painterResource(id = R.drawable.ic_left),
+                                            painter = painterResource(id = R.drawable.baseline_accessibility_24),
                                             contentDescription = "Profile",
                                             tint = Color.White,
                                             modifier = Modifier.size(30.dp)
