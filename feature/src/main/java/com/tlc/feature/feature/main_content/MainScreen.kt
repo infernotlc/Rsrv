@@ -140,12 +140,12 @@ fun MainScreen(
 
     // Handle logout navigation
     LaunchedEffect(loggingState.transaction) {
-        if (!loggingState.transaction && !isNavigating && currentRoute != NavigationGraph.CUSTOMER_SCREEN.route) {
-            // When logged out, navigate to customer screen
-            Log.d("MainScreen", "User logged out, navigating to customer screen")
+        if (!loggingState.transaction && !isNavigating && currentRoute != NavigationGraph.LOGIN.route) {
+            // When logged out, navigate to login screen
+            Log.d("MainScreen", "User logged out, navigating to login screen")
             isNavigating = true
             loginViewModel.updateLoginState()
-            navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
+            navController.navigate(NavigationGraph.LOGIN.route) {
                 popUpTo(0) { inclusive = true }
             }
             delay(500)
@@ -157,10 +157,10 @@ fun MainScreen(
     LaunchedEffect(uiState.user, loggingState.transaction) {
         if (!loggingState.isLoading) {
             if (uiState.user == null && currentRoute == NavigationGraph.PROFILE_SCREEN.route) {
-                Log.d("MainScreen", "User logged out while on profile, navigating to customer screen")
+                Log.d("MainScreen", "User logged out while on profile, navigating to login screen")
                 isNavigating = true
                 loginViewModel.updateLoginState()
-                navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
+                navController.navigate(NavigationGraph.LOGIN.route) {
                     popUpTo(0) { inclusive = true }
                 }
                 delay(500)
@@ -317,9 +317,9 @@ fun MainScreen(
                                                         popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
                                                     }
                                                 } else {
-                                                    // No user in Firebase, force update login state and navigate to customer screen
+                                                    // No user in Firebase, force update login state and navigate to login
                                                     loginViewModel.updateLoginState()
-                                                    navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
+                                                    navController.navigate(NavigationGraph.LOGIN.route) {
                                                         popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
                                                     }
                                                 }
@@ -415,9 +415,9 @@ fun MainScreen(
                                                     popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
                                                 }
                                             } else {
-                                                // No user in Firebase, force update login state and navigate to customer screen
+                                                // No user in Firebase, force update login state and navigate to login
                                                 loginViewModel.updateLoginState()
-                                                navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
+                                                navController.navigate(NavigationGraph.LOGIN.route) {
                                                     popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
                                                 }
                                             }
