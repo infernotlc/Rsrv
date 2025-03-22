@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.google.firebase.auth.FirebaseAuth
 import com.tlc.feature.R
 import com.tlc.feature.feature.auth.login.viewmodel.LoginViewModel
 import com.tlc.feature.feature.component.LoadingLottie
@@ -85,7 +86,7 @@ fun MainScreen(
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    
+
     LaunchedEffect(navController) {
         // Initial navigation based on user role
         if (isInitialNavigation) {
@@ -93,17 +94,17 @@ fun MainScreen(
             try {
                 // First check login status
                 loginViewModel.isLoggedIn()
-                
+
                 // Wait until login check is complete
                 while (loginViewModel.loggingState.value.isLoading || !loginViewModel.hasCheckedLogin) {
                     delay(100)
                 }
-                
+
                 val role = loginViewModel.loggingState.value.data
                 val isLoggedIn = loginViewModel.loggingState.value.transaction
-                
+
                 Log.d("MainScreen", "Initial navigation - Role: $role, IsLoggedIn: $isLoggedIn")
-                
+
                 // Only navigate to admin screen if user is logged in as admin
                 if (isLoggedIn && role == "admin") {
                     Log.d("MainScreen", "User is admin, navigating to admin screen")
@@ -139,15 +140,32 @@ fun MainScreen(
 
     // Handle logout navigation
     LaunchedEffect(loggingState.transaction) {
-        if (!loggingState.transaction && !isNavigating) {
-            // When logged out, navigate to customer screen
-            Log.d("MainScreen", "User logged out, navigating to customer screen")
+        if (!loggingState.transaction && !isNavigating && currentRoute != NavigationGraph.LOGIN.route) {
+            // When logged out, navigate to login screen
+            Log.d("MainScreen", "User logged out, navigating to login screen")
             isNavigating = true
+            loginViewModel.updateLoginState()
             navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
                 popUpTo(0) { inclusive = true }
             }
             delay(500)
             isNavigating = false
+        }
+    }
+
+    // Handle profile button navigation
+    LaunchedEffect(uiState.user, loggingState.transaction) {
+        if (!loggingState.isLoading) {
+            if (uiState.user == null && currentRoute == NavigationGraph.PROFILE_SCREEN.route) {
+                Log.d("MainScreen", "User logged out while on profile, navigating to login screen")
+                isNavigating = true
+                loginViewModel.updateLoginState()
+                navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
+                    popUpTo(0) { inclusive = true }
+                }
+                delay(500)
+                isNavigating = false
+            }
         }
     }
 
@@ -245,9 +263,6 @@ fun MainScreen(
                     scope.launch {
                         drawerState.close()
                     }
-                }, onLogout = {
-                    showDialog = true
-                    dialogAction = "Logout"
                 })
             }
         ) {
@@ -281,7 +296,7 @@ fun MainScreen(
                                             }
                                         }) {
                                             Icon(
-                                                painter = painterResource(R.drawable.ic_left),
+                                                painter = painterResource(R.drawable.bar),
                                                 contentDescription = "Menu",
                                                 tint = Color.White,
                                                 modifier = Modifier.size(30.dp)
@@ -291,16 +306,23 @@ fun MainScreen(
                                     actions = {
                                         IconButton(
                                             onClick = {
-                                                Log.d("MainScreen", "Profile button clicked, logged in: ${loggingState.transaction}")
-                                                if (loggingState.transaction) {
+                                                Log.d("MainScreen", "Profile button clicked, logged in: ${loggingState.transaction}, user: ${uiState.user}")
+                                                val currentUser = FirebaseAuth.getInstance().currentUser
+                                                if (currentUser != null) {
                                                     navController.navigate(NavigationGraph.PROFILE_SCREEN.route) {
+                                                        popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
+                                                    }
+                                                } else {
+                                                    // No user in Firebase, force update login state and navigate to login
+                                                    loginViewModel.updateLoginState()
+                                                    navController.navigate(NavigationGraph.LOGIN.route) {
                                                         popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
                                                     }
                                                 }
                                             }
                                         ) {
                                             Icon(
-                                                painter = painterResource(id = R.drawable.ic_left),
+                                                painter = painterResource(id = R.drawable.baseline_accessibility_24),
                                                 contentDescription = "Profile",
                                                 tint = Color.White,
                                                 modifier = Modifier.size(30.dp)
@@ -381,16 +403,25 @@ fun MainScreen(
                                 actions = {
                                     IconButton(
                                         onClick = {
-                                            Log.d("MainScreen", "Profile button clicked, logged in: ${loggingState.transaction}")
-                                            if (loggingState.transaction) {
+                                            Log.d("MainScreen", "Profile button clicked, logged in: ${loggingState.transaction}, user: ${uiState.user}")
+                                            val currentUser = FirebaseAuth.getInstance().currentUser
+                                            if (currentUser != null) {
+                                                // User is actually logged in, navigate to profile
                                                 navController.navigate(NavigationGraph.PROFILE_SCREEN.route) {
+                                                    popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
+                                                }
+                                            } else {
+                                                // No user in Firebase, force update login state and navigate to login
+                                                loginViewModel.updateLoginState()
+                                                navController.navigate(NavigationGraph.LOGIN.route) {
+                                                    Toast.makeText(context, "Please login to view your profile", Toast.LENGTH_SHORT).show()
                                                     popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
                                                 }
                                             }
                                         }
                                     ) {
                                         Icon(
-                                            painter = painterResource(id = R.drawable.ic_left),
+                                            painter = painterResource(id = R.drawable.baseline_accessibility_24),
                                             contentDescription = "Profile",
                                             tint = Color.White,
                                             modifier = Modifier.size(30.dp)
