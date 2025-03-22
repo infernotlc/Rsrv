@@ -414,6 +414,7 @@ fun MainScreen(
                                                 // No user in Firebase, force update login state and navigate to login
                                                 loginViewModel.updateLoginState()
                                                 navController.navigate(NavigationGraph.LOGIN.route) {
+                                                    Toast.makeText(context, "Please login to view your profile", Toast.LENGTH_SHORT).show()
                                                     popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
                                                 }
                                             }
