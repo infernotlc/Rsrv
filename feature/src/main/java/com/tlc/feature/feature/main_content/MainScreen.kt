@@ -309,7 +309,6 @@ fun MainScreen(
                                                 Log.d("MainScreen", "Profile button clicked, logged in: ${loggingState.transaction}, user: ${uiState.user}")
                                                 val currentUser = FirebaseAuth.getInstance().currentUser
                                                 if (currentUser != null) {
-                                                    // User is actually logged in, navigate to profile
                                                     navController.navigate(NavigationGraph.PROFILE_SCREEN.route) {
                                                         popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
                                                     }
