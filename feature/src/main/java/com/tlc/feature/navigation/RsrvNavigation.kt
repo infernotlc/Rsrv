@@ -3,11 +3,7 @@ package com.tlc.feature.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -30,6 +26,7 @@ import com.tlc.feature.feature.customer.CustomerScreen
 import com.tlc.feature.feature.design.DesignScreen
 import com.tlc.feature.feature.reservation.SaveReservationScreen
 import com.tlc.feature.feature.profile.ProfileScreen
+import com.tlc.feature.feature.profile.CustomerReservationsScreen
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -113,5 +110,10 @@ fun RsrvNavigation(
             ProfileScreen(navController)
             onTitleChange("Profile")
         }
+        composable(NavigationGraph.CUSTOMER_RESERVATIONS_SCREEN.route) {
+            CustomerReservationsScreen(navController)
+            onTitleChange("My Reservations")
+        }
+
     }
 }
