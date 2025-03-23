@@ -1,10 +1,13 @@
 package com.tlc.domain.model.firebase
 
 import com.google.firebase.Timestamp
-
 import com.google.firebase.firestore.PropertyName
 
 data class Reservation(
+    val id: String = "",
+    val userId: String = "",
+    val placeId: String = "",
+    val placeName: String = "",
     val tableId: String = "",
     val holderName: String = "",
     val holderPhoneNo: String = "",
