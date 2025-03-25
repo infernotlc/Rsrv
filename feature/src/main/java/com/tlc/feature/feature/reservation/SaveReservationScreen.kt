@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.tlc.domain.model.firebase.Reservation
 import com.tlc.feature.feature.reservation.util.AvailableTimesDropdown
 import com.tlc.feature.feature.reservation.util.DatePickerWithDialog
@@ -40,6 +41,7 @@ import com.tlc.feature.feature.reservation.util.PhoneNumber
 import com.tlc.feature.feature.reservation.util.RsrvCountDropdown
 import com.tlc.feature.feature.reservation.viewmodel.ReservationUiState
 import com.tlc.feature.feature.reservation.viewmodel.SaveReservationViewModel
+import java.util.UUID
 
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("StateFlowValueCalledInComposition")
@@ -58,6 +60,7 @@ fun SaveReservationScreen(
     var selectedAnimalCount by remember { mutableStateOf<Int?>(null) }
 
     val availableTimes by viewModel.availableTimes.collectAsState(initial = emptyList())
+    val currentUser = FirebaseAuth.getInstance().currentUser
 
     LaunchedEffect(date) { // Fetch times whenever date changes
         if (date.isNotBlank()) {
@@ -142,7 +145,12 @@ fun SaveReservationScreen(
                         if (customerName.isBlank() || customerPhoneNo.isBlank() || date.isBlank() || selectedTime.isNullOrBlank() || selectedCount == null) {
                             viewModel.updateUiState(ReservationUiState.Error("All fields are required"))
                         } else {
+                            val userId = currentUser?.uid ?: ""
                             val reservation = Reservation(
+                                id = UUID.randomUUID().toString(),
+                                userId = userId,
+                                placeId = placeId,
+                                placeName = "", // This will be set by the repository
                                 tableId = tableId,
                                 holderName = customerName,
                                 holderPhoneNo = customerPhoneNo,
@@ -152,7 +160,7 @@ fun SaveReservationScreen(
                                 time = selectedTime!!,
                                 timestamp = Timestamp.now()
                             )
-                            viewModel.saveReservation(placeId, listOf(reservation))
+                            viewModel.saveReservation(placeId, reservation)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
