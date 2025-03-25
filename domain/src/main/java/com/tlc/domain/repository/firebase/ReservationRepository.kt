@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.Flow
 interface ReservationRepository {
     suspend fun saveReservation(
         placeId: String,
-        reservations: List<Reservation>
+        reservation: Reservation
     ): Result<Unit>
 
-    suspend fun getReservations(placeId: String, date: String, onReservationsUpdated: (List<Reservation>) -> Unit)
+    suspend fun getReservations(placeId: String, date: String): Flow<List<Reservation>>
 
     suspend fun getSavedReservationTimes(placeId: String): Flow<List<String>>
 
@@ -19,7 +19,7 @@ interface ReservationRepository {
 
     suspend fun markTableAsReserved(placeId: String, designId: String): Result<Unit>
 
-    suspend fun getUserReservations(userId: String): RootResult<List<Reservation>>
+    suspend fun getUserReservations(userId: String): Flow<List<Reservation>>
 
     suspend fun cancelUnapprovedReservations(placeId: String)
 

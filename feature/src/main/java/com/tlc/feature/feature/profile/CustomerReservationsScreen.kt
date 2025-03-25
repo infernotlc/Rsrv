@@ -42,11 +42,10 @@ fun CustomerReservationsScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton (
+            IconButton(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier.width(80.dp),
-            )
-            {
+            ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
@@ -54,12 +53,12 @@ fun CustomerReservationsScreen(
                 )
             }
             
-//            Text(
-//                text = "My Reservations",
-//                color = Color.White,
-//                fontSize = 24.sp,
-//                fontWeight = FontWeight.Bold
-//            )
+            Text(
+                text = "My Reservations",
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
             
             Spacer(modifier = Modifier.width(80.dp))
         }
@@ -130,6 +129,11 @@ private fun ReservationCard(reservation: Reservation) {
             )
             Text(
                 text = "Number of People: ${reservation.customerCount}",
+                color = Color.White,
+                fontSize = 16.sp
+            )
+            Text(
+                text = "Number of Animals: ${reservation.animalCount}",
                 color = Color.White,
                 fontSize = 16.sp
             )

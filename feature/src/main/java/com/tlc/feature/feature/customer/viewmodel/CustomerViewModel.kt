@@ -57,10 +57,10 @@ class CustomerViewModel @Inject constructor(
         }
     }
 
-    fun fetchReservations(placeId: String,date: String) {
+    fun fetchReservations(placeId: String, date: String) {
         viewModelScope.launch {
-            reservationRepository.getReservations(placeId,date) { updatedReservations ->
-                _reservationsState.value = updatedReservations
+            reservationRepository.getReservations(placeId, date).collect { reservations ->
+                _reservationsState.value = reservations
             }
         }
     }

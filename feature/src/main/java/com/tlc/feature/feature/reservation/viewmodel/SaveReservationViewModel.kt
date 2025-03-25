@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.tlc.domain.model.firebase.DesignItem
 import com.tlc.domain.model.firebase.Reservation
 import com.tlc.domain.repository.firebase.ReservationRepository
-import com.tlc.domain.use_cases.reservation.SaveReservationUseCase
 import com.tlc.domain.utils.RootResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +16,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SaveReservationViewModel @Inject constructor(
-    private val saveReservationUseCase: SaveReservationUseCase,
     private val reservationRepository: ReservationRepository
 ) : ViewModel() {
 
@@ -30,21 +28,14 @@ class SaveReservationViewModel @Inject constructor(
     private val _designState = MutableStateFlow(RootResult.Success<List<DesignItem>>(emptyList()))
     val designState: StateFlow<RootResult<List<DesignItem>>> = _designState.asStateFlow()
 
-    fun saveReservation(placeId: String, reservations: List<Reservation>) {
-        if (reservations.isEmpty()) {
-            _uiState.value = ReservationUiState.Error("No reservations to save!")
-            return
-        }
-
+    fun saveReservation(placeId: String, reservation: Reservation) {
         _uiState.value = ReservationUiState.Loading
         viewModelScope.launch {
             try {
-                val date = reservations.first().date // Extract date from reservations
-                saveReservationUseCase(placeId, reservations)
+                reservationRepository.saveReservation(placeId, reservation)
                 _uiState.value = ReservationUiState.Success("Reservation saved successfully!")
 
-                val tableId = reservations.first().tableId
-                fetchAvailableTimes(placeId, tableId, date)
+                fetchAvailableTimes(placeId, reservation.tableId, reservation.date)
             } catch (e: Exception) {
                 _uiState.value = ReservationUiState.Error(e.message ?: "Failed to save reservation")
             }
@@ -77,7 +68,7 @@ class SaveReservationViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 reservationRepository.markTableAsReserved(placeId, tableId)
-                _uiState.value = ReservationUiState.Success("Table is fully booked for  and now hidden!")
+                _uiState.value = ReservationUiState.Success("Table is fully booked and now hidden!")
                 removeTableFromUI(tableId)
             } catch (e: Exception) {
                 _uiState.value = ReservationUiState.Error("Failed to mark table as reserved: ${e.message}")
