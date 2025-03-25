@@ -6,6 +6,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.tlc.domain.model.firebase.DesignItem
 import com.tlc.domain.model.firebase.Reservation
 import com.tlc.domain.repository.firebase.ReservationRepository
+import com.tlc.domain.utils.RootResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
@@ -25,23 +26,73 @@ class ReservationRepositoryImpl @Inject constructor(
             val adminUserId = getAdminUserIdByPlace(placeId)
                 ?: return Result.failure(Exception("Admin User ID not found for this place"))
 
-            reservations.forEach { reservation ->
-                val tableRef = firestore.collection("users")
+            Log.d("ReservationRepository", "Saving reservations for placeId: $placeId, adminUserId: $adminUserId")
+
+            // Get place name
+            val placeDoc = firestore.collection("users")
+                .document(adminUserId)
+                .collection("places")
+                .document(placeId)
+                .get()
+                .await()
+
+            val placeName = placeDoc.getString("name") ?: "Unknown Place"
+            Log.d("ReservationRepository", "Found place name: $placeName")
+
+            // Group reservations by date and table
+            val groupedReservations = reservations.groupBy { "${it.tableId}_${it.date}" }
+
+            groupedReservations.forEach { (key, dateReservations) ->
+                val (tableId, date) = key.split("_")
+                
+                // Create the date document first
+                val dateRef = firestore.collection("users")
                     .document(adminUserId)
                     .collection("places")
                     .document(placeId)
                     .collection("design")
-                    .document(reservation.tableId)
+                    .document(tableId)
                     .collection("reservations")
-                    .document(reservation.date)  // Group by date
-                    .collection("times")
-                    .document()
+                    .document(date)
 
-                tableRef.set(reservation).await()
+                // Save date document with metadata
+                val dateData = hashMapOf(
+                    "date" to date,
+                    "tableId" to tableId,
+                    "createdAt" to System.currentTimeMillis(),
+                    "hasReservations" to true
+                )
+                dateRef.set(dateData).await()
+                Log.d("ReservationRepository", "Created date document for: $date with data: $dateData")
+
+                // Now save all reservations for this date
+                dateReservations.forEach { reservation ->
+                    val timeRef = dateRef.collection("times").document()
+
+                    Log.d("ReservationRepository", "Saving reservation with path: users/$adminUserId/places/$placeId/design/$tableId/reservations/$date/times/${timeRef.id}")
+
+                    // Add place name, userId, placeId, and id to reservation
+                    val reservationWithPlace = reservation.copy(
+                        id = timeRef.id,
+                        placeId = placeId,
+                        placeName = placeName,
+                        userId = auth.currentUser?.uid ?: "",
+                        tableId = tableId,
+                        date = date
+                    )
+
+                    Log.d("ReservationRepository", "Saving reservation data: $reservationWithPlace")
+                    timeRef.set(reservationWithPlace).await()
+                    
+                    // Verify the reservation was saved
+                    val savedDoc = timeRef.get().await()
+                    Log.d("ReservationRepository", "Verified saved reservation: ${savedDoc.data}")
+                }
             }
 
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("ReservationRepository", "Error saving reservation: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -83,8 +134,6 @@ class ReservationRepositoryImpl @Inject constructor(
             Log.e("ReservationRepository", "Error fetching reservations", e)
         }
     }
-
-
 
     override suspend fun getSavedReservationTimes(placeId: String): Flow<List<String>> = flow {
         val adminUserId = getAdminUserIdByPlace(placeId) ?: return@flow
@@ -145,7 +194,6 @@ class ReservationRepositoryImpl @Inject constructor(
         }
     }
 
-
     private suspend fun getAdminUserIdByPlace(placeId: String): String? {
         return try {
             val usersSnapshot = firestore.collection("users")
@@ -180,6 +228,121 @@ class ReservationRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getUserReservations(userId: String): RootResult<List<Reservation>> {
+        return try {
+            val reservations = mutableListOf<Reservation>()
+            
+            Log.d("ReservationRepository", "Starting getUserReservations for userId: $userId")
+            
+            val adminUsers = firestore.collection("users")
+                .whereEqualTo("role", "admin")
+                .get()
+                .await()
+
+            Log.d("ReservationRepository", "Found ${adminUsers.size()} admin users")
+
+            for (adminDoc in adminUsers.documents) {
+                val adminUserId = adminDoc.id
+                Log.d("ReservationRepository", "Checking admin user: $adminUserId")
+                
+                val placesSnapshot = firestore.collection("users")
+                    .document(adminUserId)
+                    .collection("places")
+                    .get()
+                    .await()
+
+                Log.d("ReservationRepository", "Found ${placesSnapshot.size()} places for admin $adminUserId")
+
+                for (placeDoc in placesSnapshot.documents) {
+                    val placeId = placeDoc.id
+                    val placeName = placeDoc.getString("name") ?: "Unknown Place"
+                    Log.d("ReservationRepository", "Checking place: $placeName (ID: $placeId)")
+                    
+                    val designSnapshot = firestore.collection("users")
+                        .document(adminUserId)
+                        .collection("places")
+                        .document(placeId)
+                        .collection("design")
+                        .get()
+                        .await()
+
+                    Log.d("ReservationRepository", "Found ${designSnapshot.size()} design items for place $placeId")
+
+                    for (designDoc in designSnapshot.documents) {
+                        val tableId = designDoc.id
+                        Log.d("ReservationRepository", "Checking table: $tableId")
+                        Log.d("FirestoreDebug", "adminUserId: $adminUserId, placeId: $placeId, tableId: $tableId")
+                        val reservationsSnapshot = firestore.collection("users")
+                            .document(adminUserId)
+                            .collection("places")
+                            .document(placeId)
+                            .collection("design")
+                            .document(tableId)
+                            .collection("reservations")
+                            .get()
+                            .await()
+
+                        Log.d("FirestoreDebug", "Reservations found: ${reservationsSnapshot.documents.size}")
+                        Log.d("ReservationRepository", "Found ${reservationsSnapshot.size()} reservation dates for table $tableId")
+                        
+                        reservationsSnapshot.documents.forEach { doc ->
+                            Log.d("ReservationRepository", "Reservation date document ID: ${doc.id}")
+                        }
+
+                        for (dateDoc in reservationsSnapshot.documents) {
+                            val date = dateDoc.id
+                            Log.d("ReservationRepository", "Checking date: $date")
+                            
+                            val timesSnapshot = firestore.collection("users")
+                                .document(adminUserId)
+                                .collection("places")
+                                .document(placeId)
+                                .collection("design")
+                                .document(tableId)
+                                .collection("reservations")
+                                .document(date)
+                                .collection("times")
+                                .whereEqualTo("userId", userId)
+                                .get()
+                                .await()
+
+                            Log.d("ReservationRepository", "Found ${timesSnapshot.size()} reservations for date $date with userId $userId")
+
+                            timesSnapshot.documents.forEach { doc ->
+                                Log.d("ReservationRepository", "Reservation document data: ${doc.data}")
+                                val reservation = doc.toObject(Reservation::class.java)
+                                Log.d("ReservationRepository", "Parsed reservation: $reservation")
+                                
+                                if (reservation != null) {
+                                    val updatedReservation = reservation.copy(
+                                        id = doc.id,
+                                        placeId = placeId,
+                                        placeName = placeName,
+                                        tableId = tableId,
+                                        date = date
+                                    )
+                                    Log.d("ReservationRepository", "Updated reservation: $updatedReservation")
+                                    reservations.add(updatedReservation)
+                                } else {
+                                    Log.e("ReservationRepository", "Failed to parse reservation from document: ${doc.data}")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Log.d("ReservationRepository", "Total reservations found: ${reservations.size}")
+            reservations.forEach { reservation ->
+                Log.d("ReservationRepository", "Final reservation: $reservation")
+            }
+            
+            RootResult.Success(reservations)
+        } catch (e: Exception) {
+            Log.e("ReservationRepository", "Error fetching user reservations: ${e.message}", e)
+            RootResult.Error(e.message ?: "Failed to load reservations")
+        }
+    }
 
     override suspend fun cancelUnapprovedReservations(placeId: String) {
         val currentUserId = auth.currentUser?.uid ?: throw Exception("User not authenticated")

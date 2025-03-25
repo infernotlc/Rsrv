@@ -12,6 +12,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.tlc.feature.feature.auth.login.viewmodel.LoginViewModel
 import com.tlc.feature.feature.component.auth_components.AuthButtonComponent
+import com.tlc.feature.navigation.NavigationGraph
 
 @Composable
 fun ProfileScreen(
@@ -28,6 +29,12 @@ fun ProfileScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        AuthButtonComponent(
+            value = "My Reservations",
+            onClick = { navController.navigate(NavigationGraph.CUSTOMER_RESERVATIONS_SCREEN.route) },
+            firstColor = Color.White,
+            secondColor = Color.Black
+        )
 
         Spacer(modifier = Modifier.weight(1f))
         
