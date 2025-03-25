@@ -6,5 +6,5 @@ import javax.inject.Inject
 
 class SaveReservationUseCase @Inject constructor(private val reservationRepository: ReservationRepository) {
     suspend operator fun invoke ( placeId: String,
-                                  reservations: List<Reservation>) = reservationRepository.saveReservation(placeId, reservations)
+                                  reservations: Reservation) = reservationRepository.saveReservation(placeId, reservations)
 }
