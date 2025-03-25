@@ -4,8 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.tlc.domain.model.firebase.Reservation
-import com.tlc.domain.use_cases.reservation.GetUserReservationsUseCase
-import com.tlc.domain.utils.RootResult
+import com.tlc.domain.repository.firebase.ReservationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,11 +14,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val getUserReservationsUseCase: GetUserReservationsUseCase
+    private val reservationRepository: ReservationRepository,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+
+    private val _showLogoutDialog = MutableStateFlow(false)
+    val showLogoutDialog: StateFlow<Boolean> = _showLogoutDialog.asStateFlow()
 
     init {
         loadUserReservations()
@@ -29,26 +32,15 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
-                val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+                val userId = auth.currentUser?.uid ?: return@launch
 
-                when (val result = getUserReservationsUseCase(userId)) {
-                    is RootResult.Success -> {
-                        _uiState.value = result.data?.let {
-                            _uiState.value.copy(
-                                reservations = it,
-                                isLoading = false
-                            )
-                        }!!
-                    }
-                    is RootResult.Error -> {
+                reservationRepository.getUserReservations(userId)
+                    .collect { reservations ->
                         _uiState.value = _uiState.value.copy(
-                            error = result.message,
+                            reservations = reservations,
                             isLoading = false
                         )
                     }
-
-                    RootResult.Loading -> TODO()
-                }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     error = e.message ?: "Failed to load reservations",
@@ -57,10 +49,23 @@ class ProfileViewModel @Inject constructor(
             }
         }
     }
+
+    fun onLogoutClick() {
+        _showLogoutDialog.value = true
+    }
+
+    fun onLogoutConfirm() {
+        auth.signOut()
+        _showLogoutDialog.value = false
+    }
+
+    fun onLogoutCancel() {
+        _showLogoutDialog.value = false
+    }
 }
 
 data class ProfileUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val reservations: List<Reservation> = emptyList()
-) 
+)
