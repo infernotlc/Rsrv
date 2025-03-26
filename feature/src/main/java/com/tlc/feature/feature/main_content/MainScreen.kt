@@ -156,7 +156,7 @@ fun MainScreen(
     // Handle profile button navigation
     LaunchedEffect(uiState.user, loggingState.transaction) {
         if (!loggingState.isLoading) {
-            if (uiState.user == null && currentRoute == NavigationGraph.PROFILE_SCREEN.route) {
+            if (uiState.user == null && (currentRoute == NavigationGraph.PROFILE_SCREEN.route || currentRoute == NavigationGraph.ADMIN_PROFILE_SCREEN.route)) {
                 Log.d("MainScreen", "User logged out while on profile, navigating to login screen")
                 isNavigating = true
                 loginViewModel.updateLoginState()
@@ -269,69 +269,77 @@ fun MainScreen(
             Scaffold(
                 containerColor = Color.Black,
                 topBar = {
-                    if (shouldShowTopBar) {
-                        appBarTitle?.let { title ->
-                            Box(modifier = Modifier.background(Color.Red)) {
-                                CenterAlignedTopAppBar(
-                                    colors = TopAppBarColors(
-                                        actionIconContentColor = Color.White,
-                                        containerColor = Color.Black,
-                                        navigationIconContentColor = Color.White,
-                                        scrolledContainerColor = Color.Red,
-                                        titleContentColor = Color.White
-                                    ),
-                                    title = {
-                                        Text(
-                                            text = title,
-                                            style = TextStyle(
-                                                color = Color.White,
-                                                fontSize = 25.sp
-                                            ),
-                                        )
+                    if (NavigationGraph.shouldShowTopBar(currentRoute ?: "")) {
+                        CenterAlignedTopAppBar(
+                            title = {
+                                Text(
+                                    text = appBarTitle ?: when (currentRoute) {
+                                        NavigationGraph.ADMIN_SCREEN.route -> "Admin Dashboard"
+                                        NavigationGraph.CUSTOMER_SCREEN.route -> "Customer Dashboard"
+                                        NavigationGraph.PROFILE_SCREEN.route -> "Customer Profile"
+                                        NavigationGraph.ADMIN_PROFILE_SCREEN.route -> "Admin Profile"
+                                        NavigationGraph.LOGIN.route -> "Login"
+                                        NavigationGraph.REGISTER.route -> "Register"
+                                        NavigationGraph.FORGOT_PASSWORD.route -> "Forgot Password"
+                                        else -> ""
                                     },
-                                    navigationIcon = {
-                                        IconButton(onClick = {
+                                    style = TextStyle(
+                                        color = Color.White,
+                                        fontSize = 20.sp
+                                    )
+                                )
+                            },
+                            navigationIcon = {
+                                IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.baseline_accessibility_24),
+                                        contentDescription = "Menu",
+                                        tint = Color.White
+                                    )
+                                }
+                            },
+                            actions = {
+                                IconButton(
+                                    onClick = {
+                                        val currentUser = FirebaseAuth.getInstance().currentUser
+                                        if (currentUser != null) {
                                             scope.launch {
-                                                drawerState.open()
-                                            }
-                                        }) {
-                                            Icon(
-                                                painter = painterResource(R.drawable.bar),
-                                                contentDescription = "Menu",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(30.dp)
-                                            )
-                                        }
-                                    },
-                                    actions = {
-                                        IconButton(
-                                            onClick = {
-                                                Log.d("MainScreen", "Profile button clicked, logged in: ${loggingState.transaction}, user: ${uiState.user}")
-                                                val currentUser = FirebaseAuth.getInstance().currentUser
-                                                if (currentUser != null) {
-                                                    navController.navigate(NavigationGraph.PROFILE_SCREEN.route) {
-                                                        popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
-                                                    }
+                                                // First check login status to ensure we have the latest role
+                                                loginViewModel.isLoggedIn()
+                                                // Wait for login state to be updated
+                                                while (loginViewModel.loggingState.value.isLoading || !loginViewModel.hasCheckedLogin) {
+                                                    delay(100)
+                                                }
+                                                // Get the role from current logging state
+                                                val role = loginViewModel.loggingState.value.data
+                                                Log.d("MainScreen", "Profile button clicked - Role: $role")
+                                                if (role == "admin" || currentRoute == NavigationGraph.ADMIN_SCREEN.route) {
+                                                    navController.navigate(NavigationGraph.ADMIN_PROFILE_SCREEN.route)
                                                 } else {
-                                                    // No user in Firebase, force update login state and navigate to login
-                                                    loginViewModel.updateLoginState()
-                                                    navController.navigate(NavigationGraph.LOGIN.route) {
-                                                        popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
-                                                    }
+                                                    navController.navigate(NavigationGraph.PROFILE_SCREEN.route)
                                                 }
                                             }
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.baseline_accessibility_24),
-                                                contentDescription = "Profile",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(30.dp)
-                                            )
+                                        } else {
+                                            // No user in Firebase, force update login state and navigate to login
+                                            loginViewModel.updateLoginState()
+                                            navController.navigate(NavigationGraph.LOGIN.route) {
+                                                popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
+                                            }
                                         }
                                     }
-                                )
-                            }
-                        }
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.baseline_accessibility_24),
+                                        contentDescription = "Profile",
+                                        tint = Color.White
+                                    )
+                                }
+                            },
+                            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                                containerColor = Color.Black,
+                                titleContentColor = Color.White
+                            )
+                        )
                     }
                 },
                 content = { innerPadding ->
@@ -368,69 +376,80 @@ fun MainScreen(
         Scaffold(
             containerColor = Color.Black,
             topBar = {
-                if (shouldShowTopBar) {
-                    appBarTitle?.let { title ->
-                        Box(modifier = Modifier.background(Color.Red)) {
-                            CenterAlignedTopAppBar(
-                                colors = TopAppBarColors(
-                                    actionIconContentColor = Color.White,
-                                    containerColor = Color.Black,
-                                    navigationIconContentColor = Color.White,
-                                    scrolledContainerColor = Color.Red,
-                                    titleContentColor = Color.White
-                                ),
-                                title = {
-                                    Text(
-                                        text = title,
-                                        style = TextStyle(
-                                            color = Color.White,
-                                            fontSize = 25.sp
-                                        ),
+                if (NavigationGraph.shouldShowTopBar(currentRoute ?: "")) {
+                    CenterAlignedTopAppBar(
+                        title = {
+                            Text(
+                                text = appBarTitle ?: when (currentRoute) {
+                                    NavigationGraph.ADMIN_SCREEN.route -> "Admin Dashboard"
+                                    NavigationGraph.CUSTOMER_SCREEN.route -> "Customer Dashboard"
+                                    NavigationGraph.PROFILE_SCREEN.route -> "Customer Profile"
+                                    NavigationGraph.ADMIN_PROFILE_SCREEN.route -> "Admin Profile"
+                                    NavigationGraph.LOGIN.route -> "Login"
+                                    NavigationGraph.REGISTER.route -> "Register"
+                                    NavigationGraph.FORGOT_PASSWORD.route -> "Forgot Password"
+                                    else -> ""
+                                },
+                                style = TextStyle(
+                                    color = Color.White,
+                                    fontSize = 20.sp
+                                )
+                            )
+                        },
+                        navigationIcon = {
+                            if (currentRoute == NavigationGraph.PROFILE_SCREEN.route || 
+                              currentRoute == NavigationGraph.ADMIN_PROFILE_SCREEN.route) {
+                                IconButton(onClick = { navController.navigateUp() }) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_left),
+                                        contentDescription = "Back",
+                                        tint = Color.White
                                     )
-                                },
-                                navigationIcon = {
-                                    IconButton(onClick = {
-                                        navController.popBackStack()
-                                    }) {
-                                        Icon(
-                                            painter = painterResource(R.drawable.ic_left),
-                                            contentDescription = "Back",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(30.dp)
-                                        )
-                                    }
-                                },
-                                actions = {
-                                    IconButton(
-                                        onClick = {
-                                            Log.d("MainScreen", "Profile button clicked, logged in: ${loggingState.transaction}, user: ${uiState.user}")
-                                            val currentUser = FirebaseAuth.getInstance().currentUser
-                                            if (currentUser != null) {
-                                                // User is actually logged in, navigate to profile
-                                                navController.navigate(NavigationGraph.PROFILE_SCREEN.route) {
-                                                    popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
-                                                }
+                                }
+                            }
+                        },
+                        actions = {
+                            IconButton(
+                                onClick = {
+                                    val currentUser = FirebaseAuth.getInstance().currentUser
+                                    if (currentUser != null) {
+                                        scope.launch {
+                                            // First check login status to ensure we have the latest role
+                                            loginViewModel.isLoggedIn()
+                                            // Wait for login state to be updated
+                                            while (loginViewModel.loggingState.value.isLoading || !loginViewModel.hasCheckedLogin) {
+                                                delay(100)
+                                            }
+                                            // Get the role from current logging state
+                                            val role = loginViewModel.loggingState.value.data
+                                            Log.d("MainScreen", "Profile button clicked - Role: $role")
+                                            if (role == "admin" || currentRoute == NavigationGraph.ADMIN_SCREEN.route) {
+                                                navController.navigate(NavigationGraph.ADMIN_PROFILE_SCREEN.route)
                                             } else {
-                                                // No user in Firebase, force update login state and navigate to login
-                                                loginViewModel.updateLoginState()
-                                                navController.navigate(NavigationGraph.LOGIN.route) {
-                                                    Toast.makeText(context, "Please login to view your profile", Toast.LENGTH_SHORT).show()
-                                                    popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
-                                                }
+                                                navController.navigate(NavigationGraph.PROFILE_SCREEN.route)
                                             }
                                         }
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.baseline_accessibility_24),
-                                            contentDescription = "Profile",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(30.dp)
-                                        )
+                                    } else {
+                                        // No user in Firebase, force update login state and navigate to login
+                                        loginViewModel.updateLoginState()
+                                        navController.navigate(NavigationGraph.LOGIN.route) {
+                                            popUpTo(NavigationGraph.CUSTOMER_SCREEN.route)
+                                        }
                                     }
                                 }
-                            )
-                        }
-                    }
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_accessibility_24),
+                                    contentDescription = "Profile",
+                                    tint = Color.White
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = Color.Black,
+                            titleContentColor = Color.White
+                        )
+                    )
                 }
             },
             content = { innerPadding ->
