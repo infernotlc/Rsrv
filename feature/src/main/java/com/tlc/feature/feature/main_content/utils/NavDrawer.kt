@@ -71,8 +71,17 @@ fun NavDrawer(
                 onClick = {
                     onClose()
                     when (item) {
-                        "Home" -> navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route)
-                        "Profile" -> navController.navigate(NavigationGraph.PROFILE_SCREEN.route)
+                        "Home" -> {
+                            val currentRoute = navController.currentDestination?.route
+                            if (currentRoute == NavigationGraph.ADMIN_SCREEN.route) {
+                                navController.navigate(NavigationGraph.ADMIN_SCREEN.route)
+                            } else {
+                                navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route)
+                            }
+                        }
+                        "Search" -> {
+
+                        }
                     }
                 },
                 icon = {
@@ -80,7 +89,6 @@ fun NavDrawer(
                         imageVector = when (item) {
                             "Home" -> Icons.Default.Home
                             "Settings" -> Icons.Default.Settings
-                            "Logout" -> Icons.Default.ExitToApp
                             else -> Icons.Default.Info
                         },
                         contentDescription = item,
