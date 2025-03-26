@@ -15,6 +15,7 @@ enum class NavigationGraph(val route: String) {
     CUSTOMER_SCREEN("customer_screen"),
     SAVE_RESERVATION_SCREEN("save_reservation_screen/{placeId}/{tableId}"),
     PROFILE_SCREEN("profile_screen"),
+    ADMIN_PROFILE_SCREEN("admin_profile_screen"),
     CUSTOMER_RESERVATIONS_SCREEN("reservations_screen");
 
     companion object {
@@ -39,6 +40,7 @@ enum class NavigationGraph(val route: String) {
                 route == REGISTER.route -> true
                 route == FORGOT_PASSWORD.route -> true
                 route == PROFILE_SCREEN.route -> true
+                route == ADMIN_PROFILE_SCREEN.route -> true
                 route.startsWith("design_screen/") -> true
                 route.startsWith("save_reservation_screen/") -> true
                 else -> false
