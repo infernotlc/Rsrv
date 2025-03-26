@@ -24,6 +24,7 @@ import com.tlc.feature.feature.auth.register.RegisterScreen
 import com.tlc.feature.feature.component.LoadingLottie
 import com.tlc.feature.feature.customer.CustomerScreen
 import com.tlc.feature.feature.design.DesignScreen
+import com.tlc.feature.feature.profile.AdminProfileScreen
 import com.tlc.feature.feature.reservation.SaveReservationScreen
 import com.tlc.feature.feature.profile.ProfileScreen
 import com.tlc.feature.feature.profile.CustomerReservationsScreen
@@ -73,6 +74,9 @@ fun RsrvNavigation(
         composable(NavigationGraph.CUSTOMER_SCREEN.route) {
             CustomerScreen(navController)
             onTitleChange("Customer Screen")
+        }
+        composable(NavigationGraph.ADMIN_PROFILE_SCREEN.route) {
+            AdminProfileScreen(navController = navController)
         }
         composable(
             route = NavigationGraph.DESIGN_SCREEN.route,
