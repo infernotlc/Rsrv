@@ -77,6 +77,7 @@ fun RsrvNavigation(
         }
         composable(NavigationGraph.ADMIN_PROFILE_SCREEN.route) {
             AdminProfileScreen(navController = navController)
+            onTitleChange("Admin's Profile Screen")
         }
         composable(
             route = NavigationGraph.DESIGN_SCREEN.route,
