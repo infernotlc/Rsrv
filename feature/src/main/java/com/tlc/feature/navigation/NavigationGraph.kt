@@ -29,7 +29,16 @@ enum class NavigationGraph(val route: String) {
 
         // For showing/hiding the navigation drawer
         fun shouldShowNavigationDrawer(route: String): Boolean {
-            return route == ADMIN_SCREEN.route || route == CUSTOMER_SCREEN.route
+            return when {
+                route == ADMIN_SCREEN.route -> true
+                route == CUSTOMER_SCREEN.route -> true
+                route.startsWith("design_screen/") -> true
+                route == SAVE_RESERVATION_SCREEN.route -> true
+                route == PROFILE_SCREEN.route -> true
+                route == ADMIN_PROFILE_SCREEN.route -> true
+                route == ADMIN_RESERVATIONS_SCREEN.route -> true
+                else -> false
+            }
         }
 
         // For showing/hiding the top bar
