@@ -22,6 +22,8 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -40,49 +42,57 @@ fun NavDrawer(
     onClose: () -> Unit
 )
 {
+    val loginViewModel: LoginViewModel = hiltViewModel()
+    val loginState by loginViewModel.loggingState.collectAsState()
 
-    val loginViewModel : LoginViewModel = hiltViewModel()
     LaunchedEffect(true) {
         loginViewModel.isLoggedIn()
     }
 
     ModalDrawerSheet(
-        modifier = Modifier.fillMaxHeight(),
-        drawerContainerColor = Color.White
+        drawerContainerColor = Color.Black,
+        modifier = Modifier.fillMaxHeight()
     ) {
         Spacer(modifier = Modifier.height(16.dp))
-
         Text(
             text = "Menu",
+            modifier = Modifier.padding(16.dp),
+            color = Color.White,
             fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
+            fontWeight = FontWeight.Bold
         )
+        HorizontalDivider(color = Color.White)
+        Spacer(modifier = Modifier.height(16.dp))
 
-        HorizontalDivider(color = Color.Black)
-
-
-        val menuItems = listOf("Home", "Search", "Favorites","Settings")
+        val menuItems = listOf("Home", "Settings")
         menuItems.forEach { item ->
             NavigationDrawerItem(
                 label = { Text(text = item, color = Color.White) },
                 selected = false,
                 onClick = {
-                    onClose()
                     when (item) {
                         "Home" -> {
-                            val currentRoute = navController.currentDestination?.route
-                            if (currentRoute == NavigationGraph.ADMIN_SCREEN.route) {
-                                navController.navigate(NavigationGraph.ADMIN_SCREEN.route)
+                            val currentRoute = navController.currentDestination?.route ?: ""
+                            if (currentRoute.startsWith("design_screen/") || 
+                                currentRoute == NavigationGraph.ADMIN_SCREEN.route ||
+                                currentRoute == NavigationGraph.ADMIN_PROFILE_SCREEN.route ||
+                                currentRoute == NavigationGraph.ADMIN_RESERVATIONS_SCREEN.route) {
+                                navController.navigate(NavigationGraph.ADMIN_SCREEN.route) {
+                                    popUpTo(navController.graph.startDestinationId)
+                                    launchSingleTop = true
+                                }
                             } else {
-                                navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route)
+                                navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
+                                    popUpTo(navController.graph.startDestinationId)
+                                    launchSingleTop = true
+                                }
                             }
                         }
-                        "Search" -> {
-
+                        "Settings" -> {
+                           //TODO
                         }
                     }
+                    onClose()
                 },
                 icon = {
                     Icon(
@@ -99,8 +109,8 @@ fun NavDrawer(
                 colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = MaterialTheme.colorScheme.onSecondaryContainer),
                 shape = MaterialTheme.shapes.medium
             )
-
         }
     }
 }
+
 
