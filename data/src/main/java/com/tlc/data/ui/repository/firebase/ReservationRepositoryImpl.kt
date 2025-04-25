@@ -16,6 +16,9 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class ReservationRepositoryImpl @Inject constructor(
@@ -62,9 +65,19 @@ class ReservationRepositoryImpl @Inject constructor(
                 "timestamp" to reservation.timestamp
             )
 
-            // Save to places collection (for admin access)
-            val placesPath = "users/$adminUserId/places/$placeId/design/${reservation.tableId}/reservations/${reservation.date}/times/${reservation.id}"
-            firestore.document(placesPath).set(reservationData).await()
+            // Create a batch to perform multiple operations
+            val batch = firestore.batch()
+
+            // Create the date document first
+            val dateDocRef = firestore.document("users/$adminUserId/places/$placeId/design/${reservation.tableId}/reservations/${reservation.date}")
+            batch.set(dateDocRef, hashMapOf(
+                "date" to reservation.date,
+                "hasReservations" to true
+            ))
+
+            // Then create the reservation in times collection
+            val timesDocRef = dateDocRef.collection("times").document(reservation.id)
+            batch.set(timesDocRef, reservationData)
 
             // Save to customers collection (for faster customer access)
             val customerReservationRef = firestore
@@ -72,10 +85,12 @@ class ReservationRepositoryImpl @Inject constructor(
                 .document(reservation.userId)
                 .collection("reservations")
                 .document(reservation.id)
+            batch.set(customerReservationRef, reservationData)
 
-            customerReservationRef.set(reservationData).await()
+            // Commit all operations
+            batch.commit().await()
 
-            Log.d("ReservationRepository", "Reservation saved successfully in both collections")
+            Log.d("ReservationRepository", "Reservation saved successfully with date document")
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("ReservationRepository", "Error saving reservation", e)
@@ -438,6 +453,129 @@ class ReservationRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e("ReservationRepository", "Error fetching reservations: ${e.message}", e)
             emptyList()
+        }
+    }
+
+    override suspend fun getAdminPlaces(adminUserId: String): Flow<List<Place>> = callbackFlow {
+        try {
+            val placesRef = firestore.collection("users")
+                .document(adminUserId)
+                .collection("places")
+
+            val subscription = placesRef.addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot == null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+
+                val places = snapshot.documents.mapNotNull { it.toObject(Place::class.java) }
+                trySend(places)
+            }
+
+            awaitClose {
+                subscription.remove()
+            }
+        } catch (e: Exception) {
+            close(e)
+        }
+    }
+
+    override suspend fun getAllAdminReservations(adminUserId: String): Flow<List<Reservation>> = callbackFlow {
+        try {
+            Log.d("ReservationRepository", "Starting to fetch all reservations for admin: $adminUserId")
+            
+            val placesRef = firestore.collection("users")
+                .document(adminUserId)
+                .collection("places")
+
+            val subscription = placesRef.addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("ReservationRepository", "Error fetching places", error)
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot == null || snapshot.isEmpty) {
+                    Log.d("ReservationRepository", "No places found for admin")
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    val allReservations = mutableListOf<Reservation>()
+                    
+                    for (placeDoc in snapshot.documents) {
+                        try {
+                            val placeId = placeDoc.id
+                            Log.d("ReservationRepository", "Processing place: $placeId")
+                            
+                            val designRef = placeDoc.reference.collection("design")
+                            val designSnapshot = designRef.get().await()
+                            
+                            for (tableDoc in designSnapshot.documents) {
+                                val tableId = tableDoc.id
+                                Log.d("ReservationRepository", "Processing table: $tableId")
+                                
+                                val reservationsRef = tableDoc.reference.collection("reservations")
+                                val datesSnapshot = reservationsRef.get().await()
+                                
+                                for (dateDoc in datesSnapshot.documents) {
+                                    val date = dateDoc.id
+                                    Log.d("ReservationRepository", "Processing date: $date")
+                                    
+                                    val timesRef = dateDoc.reference.collection("times")
+                                    val timeSnapshot = timesRef.get().await()
+                                    
+                                    Log.d("ReservationRepository", "Found ${timeSnapshot.documents.size} reservations for date: $date")
+                                    
+                                    for (reservationDoc in timeSnapshot.documents) {
+                                        try {
+                                            val data = reservationDoc.data ?: continue
+                                            Log.d("ReservationRepository", "Found reservation data: $data")
+                                            
+                                            val reservation = Reservation(
+                                                id = data["id"] as? String ?: continue,
+                                                userId = data["userId"] as? String ?: continue,
+                                                placeId = data["placeId"] as? String ?: continue,
+                                                placeName = data["placeName"] as? String ?: continue,
+                                                tableId = data["tableId"] as? String ?: continue,
+                                                holderName = data["holderName"] as? String ?: continue,
+                                                holderPhoneNo = data["holderPhoneNo"] as? String ?: continue,
+                                                customerCount = (data["customerCount"] as? Long)?.toInt() ?: continue,
+                                                animalCount = (data["animalCount"] as? Long)?.toInt() ?: 0,
+                                                date = data["date"] as? String ?: continue,
+                                                time = data["time"] as? String ?: continue,
+                                                timestamp = data["timestamp"] as? com.google.firebase.Timestamp
+                                            )
+                                            allReservations.add(reservation)
+                                            Log.d("ReservationRepository", "Added reservation: ${reservation.id}")
+                                        } catch (e: Exception) {
+                                            Log.e("ReservationRepository", "Error parsing reservation document", e)
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.e("ReservationRepository", "Error fetching reservations for place ${placeDoc.id}", e)
+                        }
+                    }
+                    
+                    Log.d("ReservationRepository", "Total reservations found: ${allReservations.size}")
+                    trySend(allReservations)
+                }
+            }
+
+            awaitClose {
+                subscription.remove()
+            }
+        } catch (e: Exception) {
+            Log.e("ReservationRepository", "Error in getAllAdminReservations", e)
+            close(e)
         }
     }
 }

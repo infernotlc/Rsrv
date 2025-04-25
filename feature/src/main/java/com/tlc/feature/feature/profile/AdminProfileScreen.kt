@@ -44,7 +44,7 @@ fun AdminProfileScreen(
         AuthButtonComponent(
             value = "View All Reservations",
             onClick = {
-                // TODO: Navigate to admin reservations screen
+                navController.navigate(NavigationGraph.ADMIN_RESERVATIONS_SCREEN.route)
             }
         )
 
