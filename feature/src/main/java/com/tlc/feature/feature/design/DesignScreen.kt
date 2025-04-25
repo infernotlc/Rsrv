@@ -1,5 +1,7 @@
 package com.tlc.feature.feature.design
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,12 +23,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.tlc.domain.model.firebase.Place
 import com.tlc.domain.model.firebase.DesignItem
 import com.tlc.feature.feature.design.viewmodel.DesignViewModel
+import com.tlc.feature.navigation.NavigationGraph
 
 
 @Composable
@@ -36,8 +41,8 @@ fun DesignScreen(
     placeId: String
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
-   
     val designItems = remember { mutableStateListOf<DesignItem>() }
 
     BoxWithConstraints(
@@ -48,7 +53,7 @@ fun DesignScreen(
         val screenWidthPx = with(density) { maxWidth.toPx() }
         val screenHeightPx = with(density) { maxHeight.toPx() }
 
-     
+
         val boundary = remember {
             Rect(
                 left = 0f,
@@ -58,17 +63,15 @@ fun DesignScreen(
             )
         }
 
-       
+
         LaunchedEffect(placeId) {
             viewModel.loadDesign(placeId)
         }
 
-        
+
         LaunchedEffect(uiState.designItems) {
-            if (uiState.designItems != null) {
-                designItems.clear()
-                designItems.addAll(uiState.designItems)
-            }
+            designItems.clear()
+            designItems.addAll(uiState.designItems)
         }
 
         Column(
@@ -94,6 +97,8 @@ fun DesignScreen(
                 Button(
                     onClick = {
                         viewModel.saveDesign(placeId, designItems)
+                        Toast.makeText(context, "Design saved successfully", Toast.LENGTH_SHORT).show()
+                        navController.navigate(NavigationGraph.ADMIN_SCREEN.route)
                     },
                 ) {
                     Text("Save Design")
@@ -133,7 +138,7 @@ fun DesignScreen(
             if (uiState.isLoading) {
                 CircularProgressIndicator()
             }
-            
+
             uiState.error?.let {
                 Text("Error: $it", color = Color.Red)
             }
