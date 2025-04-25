@@ -9,14 +9,14 @@ https://drive.google.com/file/d/1K_UbTClfNRs3TlYI3QfC7rusKMr2XQje/view?usp=shari
 
  Implemented Features:
 - login, register, reset password
-- customer screen - admin screen - design screen - reservation screen
+- customer screen - admin screen - design screen - reservation screen - admin profile and customer profile screen 
 - create place- save place with reservation times and images- create design - save design
 - fetch place - fetch design for users
 - save reservation by date and time - fetch reservation times by date
 - if there is no available times for it day remove table from design
+-  Show reservations for admins and visitors
   
 Next Features:
-- Show reservations for admins and visitors
 - Admins and visitors can cancel reservations
 - Settings screen
 - More information about places
