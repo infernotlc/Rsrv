@@ -30,6 +30,10 @@ enum class NavigationGraph(val route: String) {
         // For showing/hiding the navigation drawer
         fun shouldShowNavigationDrawer(route: String): Boolean {
             return when {
+                route == LOGIN.route -> false
+                route == REGISTER.route -> false
+                route == FORGOT_PASSWORD.route -> false
+                route == IS_LOGGED_IN.route -> false
                 route == ADMIN_SCREEN.route -> true
                 route == CUSTOMER_SCREEN.route -> true
                 route.startsWith("design_screen/") -> true
