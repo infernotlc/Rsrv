@@ -1,6 +1,7 @@
 package com.tlc.domain.repository.firebase
 
 import com.tlc.domain.model.firebase.DesignItem
+import com.tlc.domain.model.firebase.Place
 import com.tlc.domain.model.firebase.Reservation
 import com.tlc.domain.utils.RootResult
 import kotlinx.coroutines.flow.Flow
@@ -26,5 +27,9 @@ interface ReservationRepository {
     suspend fun cancelAllReservations(placeId: String)
 
     suspend fun fetchReservationsForPlace(placeId: String): List<Reservation>
+
+    suspend fun getAdminPlaces(adminUserId: String): Flow<List<Place>>
+
+    suspend fun getAllAdminReservations(adminUserId: String): Flow<List<Reservation>>
 }
 
