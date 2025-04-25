@@ -301,7 +301,7 @@ fun AdminScreen(
 
                     is RootResult.Success -> {
                         Log.d(
-                            "ChooseSportScreen",
+                            "ChooseRsrvScreen",
                             "Place added/updated successfully: ${addState.data}"
                         )
                     }
