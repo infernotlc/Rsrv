@@ -25,6 +25,7 @@ import com.tlc.feature.feature.component.LoadingLottie
 import com.tlc.feature.feature.customer.CustomerScreen
 import com.tlc.feature.feature.design.DesignScreen
 import com.tlc.feature.feature.profile.AdminProfileScreen
+import com.tlc.feature.feature.profile.AdminReservationsScreen
 import com.tlc.feature.feature.reservation.SaveReservationScreen
 import com.tlc.feature.feature.profile.ProfileScreen
 import com.tlc.feature.feature.profile.CustomerReservationsScreen
@@ -79,6 +80,10 @@ fun RsrvNavigation(
             AdminProfileScreen(navController = navController)
             onTitleChange("Admin's Profile Screen")
         }
+        composable(NavigationGraph.ADMIN_RESERVATIONS_SCREEN.route) {
+            AdminReservationsScreen(navController = navController)
+            onTitleChange("All Reservations")
+        }
         composable(
             route = NavigationGraph.DESIGN_SCREEN.route,
             arguments = listOf(navArgument("placeData") {
@@ -119,6 +124,5 @@ fun RsrvNavigation(
             CustomerReservationsScreen(navController)
             onTitleChange("My Reservations")
         }
-
     }
 }
