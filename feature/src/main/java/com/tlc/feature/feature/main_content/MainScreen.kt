@@ -281,6 +281,7 @@ fun MainScreen(
                                         NavigationGraph.LOGIN.route -> "Login"
                                         NavigationGraph.REGISTER.route -> "Register"
                                         NavigationGraph.FORGOT_PASSWORD.route -> "Forgot Password"
+                                        NavigationGraph.DESIGN_SCREEN.route -> "Design Screen"
                                         else -> ""
                                     },
                                     style = TextStyle(
@@ -388,6 +389,7 @@ fun MainScreen(
                                     NavigationGraph.LOGIN.route -> "Login"
                                     NavigationGraph.REGISTER.route -> "Register"
                                     NavigationGraph.FORGOT_PASSWORD.route -> "Forgot Password"
+                                    NavigationGraph.DESIGN_SCREEN.route -> "Design Screen"
                                     else -> ""
                                 },
                                 style = TextStyle(
