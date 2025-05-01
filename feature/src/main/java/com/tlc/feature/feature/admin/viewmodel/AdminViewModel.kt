@@ -1,9 +1,12 @@
 package com.tlc.feature.feature.admin.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tlc.domain.model.api.CountryData
 import com.tlc.domain.model.firebase.PlaceData
+import com.tlc.domain.use_cases.api.GetCountriesUseCase
 import com.tlc.domain.use_cases.firebase.place.AddPlaceUseCase
 import com.tlc.domain.use_cases.firebase.place.DeletePlaceUseCase
 import com.tlc.domain.use_cases.firebase.place.GetAllPlacesUseCase
@@ -28,7 +31,8 @@ class AdminViewModel @Inject constructor(
     private val deletePlaceUseCase: DeletePlaceUseCase,
     private val getAllPlacesUseCase: GetAllPlacesUseCase,
     private val uploadImageUseCase: UploadImageUseCase,
-    private val updatePlaceUseCase: UpdatePlaceUseCase
+    private val updatePlaceUseCase: UpdatePlaceUseCase,
+    private val getCountriesUseCase: GetCountriesUseCase
 ) : ViewModel() {
 
     private val _addDeleteState = MutableStateFlow(AddDeleteState())
@@ -39,6 +43,50 @@ class AdminViewModel @Inject constructor(
 
     private val _placeImageUIState = MutableStateFlow(PlaceImageUIState())
     val placeImageUIState: StateFlow<PlaceImageUIState> get() = _placeImageUIState
+
+    private val _countriesState = MutableStateFlow<List<CountryData>>(emptyList())
+    val countriesState: StateFlow<List<CountryData>> = _countriesState
+
+    private val _isLoadingCountries = MutableStateFlow(true)
+    val isLoadingCountries: StateFlow<Boolean> = _isLoadingCountries
+
+    private val _countriesError = MutableStateFlow<String?>(null)
+    val countriesError: StateFlow<String?> = _countriesError
+
+    init {
+        loadCountries()
+
+    }
+
+    private fun loadCountries() {
+        viewModelScope.launch {
+            getCountriesUseCase().collect { result ->
+                when (result) {
+                    is Loading -> {
+                        _isLoadingCountries.value = true
+                        _countriesError.value = null
+                        Log.d("AdminViewModel", "Loading countries...")
+                    }
+                    is Success -> {
+                        _isLoadingCountries.value = false
+                        _countriesError.value = null
+                        result.data?.let { response ->
+                            _countriesState.value = response.data
+                            Log.d("AdminViewModel", "Countries loaded successfully: ${response.data.size} countries")
+                        } ?: run {
+                            Log.e("AdminViewModel", "Success but no data received")
+                            _countriesError.value = "No data received"
+                        }
+                    }
+                    is Error -> {
+                        _isLoadingCountries.value = false
+                        _countriesError.value = result.message
+                        Log.e("AdminViewModel", "Error loading countries: ${result.message}")
+                    }
+                }
+            }
+        }
+    }
 
     private fun addPlace(placeData: PlaceData) {
         _addDeleteState.value = AddDeleteState(isLoading = true, result = Loading)
@@ -87,7 +135,13 @@ class AdminViewModel @Inject constructor(
         }
     }
 
-    internal fun uploadImageAndAddPlace(uri: Uri, placeName: String, reservationTimes: List<String>) {
+    internal fun uploadImageAndAddPlace(
+        uri: Uri, 
+        placeName: String, 
+        reservationTimes: List<String>,
+        country: String,
+        city: String
+    ) {
         _placeImageUIState.value = _placeImageUIState.value.copy(isLoading = true)
         viewModelScope.launch {
             uploadImageUseCase(uri, "places").collect { result ->
@@ -102,7 +156,9 @@ class AdminViewModel @Inject constructor(
                         val place = PlaceData(
                             name = placeName,
                             placeImageUrl = imageUrl ?: "",
-                            reservationTimes = reservationTimes
+                            reservationTimes = reservationTimes,
+                            country = country,
+                            city = city
                         )
                         addPlace(place)
                     }

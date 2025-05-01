@@ -62,6 +62,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.tlc.data.mapper.firebase_mapper.toPlace
 import com.tlc.domain.model.firebase.PlaceData
+import com.tlc.domain.use_cases.api.GetCountriesUseCase
 import com.tlc.domain.utils.RootResult
 import com.tlc.feature.R
 import com.tlc.feature.feature.admin.component.AddPlaceDialog
@@ -169,8 +170,9 @@ fun AdminScreen(
                             adminViewModel.uploadImageAndAddPlace(
                                 selectedImageUri.value!!,
                                 place.name,
-                                reservationTimes = place.reservationTimes
-
+                                reservationTimes = place.reservationTimes,
+                                country = place.country,
+                                city = place.city
                             )
                         },
                         onImagePick = {
@@ -181,7 +183,8 @@ fun AdminScreen(
                             }
                         },
                         selectedImageUri = selectedImageUri.value,
-                        context = context
+                        context = context,
+                        adminViewModel = adminViewModel
                     )
                 }
 

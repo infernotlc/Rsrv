@@ -3,11 +3,13 @@ package com.tlc.data.di
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.tlc.data.ui.repository.api.CountriesRepositoryImpl
 import com.tlc.data.ui.repository.firebase.AuthRepositoryImpl
 import com.tlc.data.ui.repository.firebase.CustomerRepositoryImpl
 import com.tlc.data.ui.repository.firebase.DesignRepositoryImpl
 import com.tlc.data.ui.repository.firebase.PlaceRepositoryImpl
 import com.tlc.data.ui.repository.firebase.ReservationRepositoryImpl
+import com.tlc.domain.repository.api.CountriesRepository
 import com.tlc.domain.repository.firebase.AuthRepository
 import com.tlc.domain.repository.firebase.CustomerRepository
 import com.tlc.domain.repository.firebase.DesignRepository
@@ -84,4 +86,9 @@ object FirebaseModule {
     return ReservationRepositoryImpl(firestore,firebaseAuth)
     }
 
+    @Provides
+    @Singleton
+    fun provideCountriesRepository(): CountriesRepository {
+        return CountriesRepositoryImpl()
+    }
 }

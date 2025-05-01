@@ -10,7 +10,9 @@ fun PlaceDataDto.toPlaceData(): PlaceData {
         capacity = capacity,
         id = id,
         placeImageUrl = placeImageUrl,
-        reservationTimes = reservationTimes // Map reservationTimes
+        reservationTimes = reservationTimes,
+        country = country,
+        city = city
     )
 }
 
@@ -20,16 +22,18 @@ fun PlaceData.toPlaceDataDto(): PlaceDataDto {
         capacity = capacity,
         id = id,
         placeImageUrl = placeImageUrl,
-        reservationTimes = reservationTimes // Map reservationTimes
+        reservationTimes = reservationTimes,
+        country = country,
+        city = city
     )
 }
 
 fun PlaceData.toPlace(): Place {
     return Place(
-    placeImageUrl = placeImageUrl,
-    id = id,
-    name = name,
-    capacity = capacity,
+        placeImageUrl = placeImageUrl,
+        id = id,
+        name = name,
+        capacity = capacity,
         reservationTimes = reservationTimes
     )
 }
