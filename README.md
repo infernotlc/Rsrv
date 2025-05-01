@@ -14,13 +14,15 @@ https://drive.google.com/file/d/1K_UbTClfNRs3TlYI3QfC7rusKMr2XQje/view?usp=shari
 - fetch place - fetch design for users
 - save reservation by date and time - fetch reservation times by date
 - if there is no available times for it day remove table from design
--  Show reservations for admins and visitors
+- Show reservations for admins and visitors
+- Save places by country and city
+- filtering places with country and cities 
   
 Next Features:
 - Admins and visitors can cancel reservations
 - Settings screen
 - More information about places
-- Save places by country and city, approve them to show their places
+
 - Fetch places by country and city
 - Take comments for places
 - Punishment system for non made visits (after 30 minutes of reservation can be automatically cancel)
