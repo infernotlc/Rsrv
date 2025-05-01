@@ -34,7 +34,13 @@ class PlaceRepositoryImpl @Inject constructor(
                 val placeId = firestore.collection("users").document(userId).collection("places")
                     .document().id
 
-                val placeInfo = placeData.copy(id = placeId, reservationTimes = placeData.reservationTimes.toList())
+                val placeInfo = placeData.toPlaceDataDto().copy(
+                    id = placeId,
+                    reservationTimes = placeData.reservationTimes.toList(),
+                    placeImageUrl = placeData.placeImageUrl,
+                    country = placeData.country,
+                    city = placeData.city
+                )
 
                 Log.d("FirestoreSave", "Saving place: $placeInfo")
 
@@ -89,7 +95,10 @@ class PlaceRepositoryImpl @Inject constructor(
             val currentUser = firebaseAuth.currentUser
             val userId = currentUser?.uid
             if (userId != null) {
-                val placeInfo = placeData.toPlaceDataDto()
+                val placeInfo = placeData.toPlaceDataDto().copy(
+                    id = placeId,
+                    reservationTimes = placeData.reservationTimes.toList()
+                )
                 val placeRef =
                     firestore.collection("users").document(userId).collection("places")
                         .document(placeId)
