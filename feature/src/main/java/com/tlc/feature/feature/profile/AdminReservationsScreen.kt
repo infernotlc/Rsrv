@@ -27,6 +27,8 @@ fun AdminReservationsScreen(
     viewModel: AdminReservationsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showCancelDialog by remember { mutableStateOf(false) }
+    var reservationToCancel by remember { mutableStateOf<Reservation?>(null) }
 
     Column(
         modifier = Modifier
@@ -88,15 +90,63 @@ fun AdminReservationsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(uiState.reservations) { reservation ->
-                    ReservationCard(reservation)
+                    ReservationCard(
+                        reservation = reservation,
+                        onCancelClick = {
+                            reservationToCancel = reservation
+                            showCancelDialog = true
+                        }
+                    )
                 }
             }
         }
     }
+
+    // Cancel confirmation dialog
+    if (showCancelDialog && reservationToCancel != null) {
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = {
+                Text(
+                    text = "Cancel Reservation",
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to cancel the reservation for ${reservationToCancel!!.holderName} at ${reservationToCancel!!.placeName} on ${reservationToCancel!!.date} at ${reservationToCancel!!.time}?",
+                    color = Color.Black
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.cancelReservation(reservationToCancel!!.id)
+                        showCancelDialog = false
+                        reservationToCancel = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Cancel Reservation", color = Color.White)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = {
+                        showCancelDialog = false
+                        reservationToCancel = null
+                    }
+                ) {
+                    Text("Keep Reservation", color = Color.Black)
+                }
+            }
+        )
+    }
 }
 
 @Composable
-private fun ReservationCard(reservation: Reservation) {
+private fun ReservationCard(reservation: Reservation, onCancelClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -147,6 +197,27 @@ private fun ReservationCard(reservation: Reservation) {
                 color = Color.White,
                 fontSize = 16.sp
             )
+            Text(
+                text = "Status: ${reservation.status.capitalize()}",
+                color = if (reservation.status == "cancelled") Color.Red else Color.Green,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+            
+            if (reservation.status == "active") {
+                Button(
+                    onClick = onCancelClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text(
+                        text = "Cancel Reservation",
+                        color = Color.White
+                    )
+                }
+            }
         }
     }
 } 
