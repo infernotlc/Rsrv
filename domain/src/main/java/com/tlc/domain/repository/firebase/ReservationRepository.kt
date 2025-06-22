@@ -22,10 +22,6 @@ interface ReservationRepository {
 
     suspend fun getUserReservations(userId: String): Flow<List<Reservation>>
 
-    suspend fun cancelUnapprovedReservations(placeId: String)
-
-    suspend fun cancelAllReservations(placeId: String)
-
     suspend fun fetchReservationsForPlace(placeId: String): List<Reservation>
 
     suspend fun getAdminPlaces(adminUserId: String): Flow<List<Place>>
