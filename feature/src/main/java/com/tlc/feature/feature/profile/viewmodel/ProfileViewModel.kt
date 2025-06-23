@@ -62,6 +62,32 @@ class ProfileViewModel @Inject constructor(
     fun onLogoutCancel() {
         _showLogoutDialog.value = false
     }
+
+    fun cancelReservation(reservationId: String) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true)
+                val userId = auth.currentUser?.uid ?: return@launch
+
+                reservationRepository.cancelReservation(reservationId, userId)
+                    .onSuccess {
+                        // Reload reservations after cancellation
+                        loadUserReservations()
+                    }
+                    .onFailure { exception ->
+                        _uiState.value = _uiState.value.copy(
+                            error = exception.message ?: "Failed to cancel reservation",
+                            isLoading = false
+                        )
+                    }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = e.message ?: "Failed to cancel reservation",
+                    isLoading = false
+                )
+            }
+        }
+    }
 }
 
 data class ProfileUiState(

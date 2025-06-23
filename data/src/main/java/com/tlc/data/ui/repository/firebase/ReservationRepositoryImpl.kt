@@ -62,6 +62,7 @@ class ReservationRepositoryImpl @Inject constructor(
                 "animalCount" to reservation.animalCount,
                 "date" to reservation.date,
                 "time" to reservation.time,
+                "status" to reservation.status,
                 "timestamp" to reservation.timestamp
             )
 
@@ -283,6 +284,7 @@ class ReservationRepositoryImpl @Inject constructor(
                                 animalCount = (data["animalCount"] as? Long)?.toInt() ?: return@mapNotNull null,
                                 date = data["date"] as? String ?: return@mapNotNull null,
                                 time = data["time"] as? String ?: return@mapNotNull null,
+                                status = data["status"] as? String ?: "active",
                                 timestamp = data["timestamp"] as? com.google.firebase.Timestamp
                             )
                         } catch (e: Exception) {
@@ -449,6 +451,7 @@ class ReservationRepositoryImpl @Inject constructor(
                                                 animalCount = (data["animalCount"] as? Long)?.toInt() ?: 0,
                                                 date = data["date"] as? String ?: continue,
                                                 time = data["time"] as? String ?: continue,
+                                                status = data["status"] as? String ?: "active",
                                                 timestamp = data["timestamp"] as? com.google.firebase.Timestamp
                                             )
                                             allReservations.add(reservation)
@@ -475,6 +478,62 @@ class ReservationRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e("ReservationRepository", "Error in getAllAdminReservations", e)
             close(e)
+        }
+    }
+
+    override suspend fun cancelReservation(reservationId: String, userId: String): Result<Unit> {
+        return try {
+            Log.d("ReservationRepository", "Cancelling reservation: $reservationId for user: $userId")
+            
+            // First, get the reservation details from customer collection
+            val customerReservationRef = firestore
+                .collection("customers")
+                .document(userId)
+                .collection("reservations")
+                .document(reservationId)
+            
+            val reservationDoc = customerReservationRef.get().await()
+            if (!reservationDoc.exists()) {
+                return Result.failure(Exception("Reservation not found"))
+            }
+            
+            val reservationData = reservationDoc.data ?: return Result.failure(Exception("Invalid reservation data"))
+            val placeId = reservationData["placeId"] as? String ?: return Result.failure(Exception("Place ID not found"))
+            val tableId = reservationData["tableId"] as? String ?: return Result.failure(Exception("Table ID not found"))
+            val date = reservationData["date"] as? String ?: return Result.failure(Exception("Date not found"))
+            
+            // Get admin user ID for this place
+            val adminUserId = getAdminUserIdByPlace(placeId) ?: return Result.failure(Exception("Admin User ID not found for this place"))
+            
+            // Create a batch to perform multiple operations
+            val batch = firestore.batch()
+            
+            // Update status in customer collection
+            batch.update(customerReservationRef, "status", "cancelled")
+            
+            // Update status in admin collection
+            val adminReservationRef = firestore
+                .collection("users")
+                .document(adminUserId)
+                .collection("places")
+                .document(placeId)
+                .collection("design")
+                .document(tableId)
+                .collection("reservations")
+                .document(date)
+                .collection("times")
+                .document(reservationId)
+            
+            batch.update(adminReservationRef, "status", "cancelled")
+            
+            // Commit all operations
+            batch.commit().await()
+            
+            Log.d("ReservationRepository", "Reservation cancelled successfully")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("ReservationRepository", "Error cancelling reservation", e)
+            Result.failure(e)
         }
     }
 }

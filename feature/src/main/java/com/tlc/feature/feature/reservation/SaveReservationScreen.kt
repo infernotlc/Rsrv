@@ -158,6 +158,7 @@ fun SaveReservationScreen(
                                 animalCount = selectedAnimalCount ?: 0,
                                 date = date,
                                 time = selectedTime!!,
+                                status = "active",
                                 timestamp = Timestamp.now()
                             )
                             viewModel.saveReservation(placeId, reservation)

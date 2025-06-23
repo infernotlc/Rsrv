@@ -52,4 +52,40 @@ class AdminReservationsViewModel @Inject constructor(
             }
         }
     }
+
+    fun cancelReservation(reservationId: String) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true)
+                val adminUserId = auth.currentUser?.uid ?: return@launch
+
+                // For admin, we need to get the customer's userId from the reservation
+                // First, find the reservation in the current list
+                val reservation = _uiState.value.reservations.find { it.id == reservationId }
+                if (reservation != null) {
+                    reservationRepository.cancelReservation(reservationId, reservation.userId)
+                        .onSuccess {
+                            // Reload reservations after cancellation
+                            loadAllReservations()
+                        }
+                        .onFailure { exception ->
+                            _uiState.value = _uiState.value.copy(
+                                error = exception.message ?: "Failed to cancel reservation",
+                                isLoading = false
+                            )
+                        }
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        error = "Reservation not found",
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = e.message ?: "Failed to cancel reservation",
+                    isLoading = false
+                )
+            }
+        }
+    }
 } 
