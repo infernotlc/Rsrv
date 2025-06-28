@@ -53,7 +53,7 @@ class AdminReservationsViewModel @Inject constructor(
         }
     }
 
-    fun cancelReservation(reservationId: String) {
+    fun cancelReservation(reservationId: String, cancellationNotes: String = "") {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
@@ -63,7 +63,7 @@ class AdminReservationsViewModel @Inject constructor(
                 // First, find the reservation in the current list
                 val reservation = _uiState.value.reservations.find { it.id == reservationId }
                 if (reservation != null) {
-                    reservationRepository.cancelReservation(reservationId, reservation.userId)
+                    reservationRepository.cancelReservation(reservationId, reservation.userId, cancellationNotes)
                         .onSuccess {
                             // Reload reservations after cancellation
                             loadAllReservations()
