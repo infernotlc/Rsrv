@@ -28,6 +28,6 @@ interface ReservationRepository {
 
     suspend fun getAllAdminReservations(adminUserId: String): Flow<List<Reservation>>
 
-    suspend fun cancelReservation(reservationId: String, userId: String): Result<Unit>
+    suspend fun cancelReservation(reservationId: String, userId: String, cancellationNotes: String = ""): Result<Unit>
 }
 
