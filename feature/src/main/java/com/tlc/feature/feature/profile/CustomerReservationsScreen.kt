@@ -125,7 +125,7 @@ fun CustomerReservationsScreen(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Text(
-                        text = "Please provide a reason for cancellation:",
+                        text = "Please provide a reason for cancellation (minimum 20 characters):",
                         color = Color.Black,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -144,12 +144,20 @@ fun CustomerReservationsScreen(
                         minLines = 3,
                         maxLines = 5
                     )
+                    if (cancellationNotes.isNotEmpty() && cancellationNotes.length < 20) {
+                        Text(
+                            text = "Please enter at least 20 characters (${cancellationNotes.length}/20)",
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        if (cancellationNotes.isNotBlank()) {
+                        if (cancellationNotes.length >= 20) {
                             profileViewModel.cancelReservation(reservationToCancel!!.id, cancellationNotes)
                             showCancelDialog = false
                             reservationToCancel = null
@@ -157,7 +165,7 @@ fun CustomerReservationsScreen(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                    enabled = cancellationNotes.isNotBlank()
+                    enabled = cancellationNotes.length >= 20
                 ) {
                     Text("Cancel Reservation", color = Color.White)
                 }
