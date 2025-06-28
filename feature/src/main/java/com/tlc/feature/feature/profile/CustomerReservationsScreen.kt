@@ -29,6 +29,7 @@ fun CustomerReservationsScreen(
     val uiState by profileViewModel.uiState.collectAsState()
     var showCancelDialog by remember { mutableStateOf(false) }
     var reservationToCancel by remember { mutableStateOf<Reservation?>(null) }
+    var cancellationNotes by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -94,6 +95,7 @@ fun CustomerReservationsScreen(
                         reservation = reservation,
                         onCancelClick = {
                             reservationToCancel = reservation
+                            cancellationNotes = ""
                             showCancelDialog = true
                         }
                     )
@@ -102,10 +104,12 @@ fun CustomerReservationsScreen(
         }
     }
 
-    // Cancel confirmation dialog
     if (showCancelDialog && reservationToCancel != null) {
         AlertDialog(
-            onDismissRequest = { showCancelDialog = false },
+            onDismissRequest = { 
+                showCancelDialog = false 
+                cancellationNotes = ""
+            },
             title = {
                 Text(
                     text = "Cancel Reservation",
@@ -114,19 +118,46 @@ fun CustomerReservationsScreen(
                 )
             },
             text = {
-                Text(
-                    text = "Are you sure you want to cancel your reservation for ${reservationToCancel!!.placeName} on ${reservationToCancel!!.date} at ${reservationToCancel!!.time}?",
-                    color = Color.Black
-                )
+                Column {
+                    Text(
+                        text = "Are you sure you want to cancel your reservation for ${reservationToCancel!!.placeName} on ${reservationToCancel!!.date} at ${reservationToCancel!!.time}?",
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    Text(
+                        text = "Please provide a reason for cancellation:",
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    OutlinedTextField(
+                        value = cancellationNotes,
+                        onValueChange = { cancellationNotes = it },
+                        placeholder = { Text("Enter cancellation reason...") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Red,
+                            unfocusedBorderColor = Color.Gray,
+                            focusedLabelColor = Color.Red,
+                            unfocusedLabelColor = Color.Gray
+                        ),
+                        minLines = 3,
+                        maxLines = 5
+                    )
+                }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        profileViewModel.cancelReservation(reservationToCancel!!.id)
-                        showCancelDialog = false
-                        reservationToCancel = null
+                        if (cancellationNotes.isNotBlank()) {
+                            profileViewModel.cancelReservation(reservationToCancel!!.id, cancellationNotes)
+                            showCancelDialog = false
+                            reservationToCancel = null
+                            cancellationNotes = ""
+                        }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    enabled = cancellationNotes.isNotBlank()
                 ) {
                     Text("Cancel Reservation", color = Color.White)
                 }
@@ -136,6 +167,7 @@ fun CustomerReservationsScreen(
                     onClick = {
                         showCancelDialog = false
                         reservationToCancel = null
+                        cancellationNotes = ""
                     }
                 ) {
                     Text("Keep Reservation", color = Color.Black)
@@ -198,6 +230,30 @@ private fun ReservationCard(reservation: Reservation, onCancelClick: () -> Unit)
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
+            
+            if (reservation.status == "cancelled" && reservation.cancellationNotes.isNotBlank()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1B1B))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp)
+                    ) {
+                        Text(
+                            text = "Cancellation Reason:",
+                            color = Color.Red,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = reservation.cancellationNotes,
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+            }
             
             if (reservation.status == "active") {
                 Button(
