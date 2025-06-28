@@ -16,6 +16,7 @@ data class Reservation(
     val date: String = "",
     val time: String = "",
     val status: String = "active", // "active", "cancelled"
+    val cancellationNotes: String = "", // Notes added when cancelling
 // or use @field:JvmField  instead of those ones
 //    @get:PropertyName("reserved") @set:PropertyName("reserved")
 //    var isReserved: Boolean = false,
