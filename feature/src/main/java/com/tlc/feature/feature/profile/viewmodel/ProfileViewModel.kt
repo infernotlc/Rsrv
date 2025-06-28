@@ -63,13 +63,13 @@ class ProfileViewModel @Inject constructor(
         _showLogoutDialog.value = false
     }
 
-    fun cancelReservation(reservationId: String) {
+    fun cancelReservation(reservationId: String, cancellationNotes: String = "") {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
                 val userId = auth.currentUser?.uid ?: return@launch
 
-                reservationRepository.cancelReservation(reservationId, userId)
+                reservationRepository.cancelReservation(reservationId, userId, cancellationNotes)
                     .onSuccess {
                         // Reload reservations after cancellation
                         loadUserReservations()
