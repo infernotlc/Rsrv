@@ -63,6 +63,7 @@ class ReservationRepositoryImpl @Inject constructor(
                 "date" to reservation.date,
                 "time" to reservation.time,
                 "status" to reservation.status,
+                "cancellationNotes" to reservation.cancellationNotes,
                 "timestamp" to reservation.timestamp
             )
 
@@ -285,6 +286,7 @@ class ReservationRepositoryImpl @Inject constructor(
                                 date = data["date"] as? String ?: return@mapNotNull null,
                                 time = data["time"] as? String ?: return@mapNotNull null,
                                 status = data["status"] as? String ?: "active",
+                                cancellationNotes = data["cancellationNotes"] as? String ?: "",
                                 timestamp = data["timestamp"] as? com.google.firebase.Timestamp
                             )
                         } catch (e: Exception) {
@@ -452,6 +454,7 @@ class ReservationRepositoryImpl @Inject constructor(
                                                 date = data["date"] as? String ?: continue,
                                                 time = data["time"] as? String ?: continue,
                                                 status = data["status"] as? String ?: "active",
+                                                cancellationNotes = data["cancellationNotes"] as? String ?: "",
                                                 timestamp = data["timestamp"] as? com.google.firebase.Timestamp
                                             )
                                             allReservations.add(reservation)
@@ -481,9 +484,9 @@ class ReservationRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun cancelReservation(reservationId: String, userId: String): Result<Unit> {
+    override suspend fun cancelReservation(reservationId: String, userId: String, cancellationNotes: String): Result<Unit> {
         return try {
-            Log.d("ReservationRepository", "Cancelling reservation: $reservationId for user: $userId")
+            Log.d("ReservationRepository", "Cancelling reservation: $reservationId for user: $userId with notes: $cancellationNotes")
             
             // First, get the reservation details from customer collection
             val customerReservationRef = firestore
@@ -508,10 +511,15 @@ class ReservationRepositoryImpl @Inject constructor(
             // Create a batch to perform multiple operations
             val batch = firestore.batch()
             
-            // Update status in customer collection
-            batch.update(customerReservationRef, "status", "cancelled")
+            // Update status and cancellation notes in customer collection
+            batch.update(customerReservationRef, 
+                mapOf(
+                    "status" to "cancelled",
+                    "cancellationNotes" to cancellationNotes
+                )
+            )
             
-            // Update status in admin collection
+            // Update status and cancellation notes in admin collection
             val adminReservationRef = firestore
                 .collection("users")
                 .document(adminUserId)
@@ -524,12 +532,17 @@ class ReservationRepositoryImpl @Inject constructor(
                 .collection("times")
                 .document(reservationId)
             
-            batch.update(adminReservationRef, "status", "cancelled")
+            batch.update(adminReservationRef, 
+                mapOf(
+                    "status" to "cancelled",
+                    "cancellationNotes" to cancellationNotes
+                )
+            )
             
             // Commit all operations
             batch.commit().await()
             
-            Log.d("ReservationRepository", "Reservation cancelled successfully")
+            Log.d("ReservationRepository", "Reservation cancelled successfully with notes: $cancellationNotes")
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("ReservationRepository", "Error cancelling reservation", e)
