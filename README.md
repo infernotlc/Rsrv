@@ -16,13 +16,13 @@ https://drive.google.com/file/d/1K_UbTClfNRs3TlYI3QfC7rusKMr2XQje/view?usp=shari
 - if there is no available times for it day remove table from design
 - Show reservations for admins and visitors
 - Save places by country and city
-- filtering places with country and cities 
+- filtering places with country and cities
+- Admins and visitors can cancel reservations
   
 Next Features:
-- Admins and visitors can cancel reservations
+
 - Settings screen
 - More information about places
-
 - Fetch places by country and city
 - Take comments for places
 - Punishment system for non made visits (after 30 minutes of reservation can be automatically cancel)
