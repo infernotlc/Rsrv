@@ -29,5 +29,9 @@ interface ReservationRepository {
     suspend fun getAllAdminReservations(adminUserId: String): Flow<List<Reservation>>
 
     suspend fun cancelReservation(reservationId: String, userId: String, cancellationNotes: String = ""): Result<Unit>
+
+    suspend fun isTableFullyBookedForDate(placeId: String, tableId: String, date: String): Boolean
+
+    suspend fun getTableFullyBookedStatus(placeId: String, tableId: String, date: String): Boolean
 }
 

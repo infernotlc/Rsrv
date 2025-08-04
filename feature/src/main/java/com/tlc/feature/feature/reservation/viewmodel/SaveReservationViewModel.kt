@@ -35,6 +35,7 @@ class SaveReservationViewModel @Inject constructor(
                 reservationRepository.saveReservation(placeId, reservation)
                 _uiState.value = ReservationUiState.Success("Reservation saved successfully!")
 
+                // After saving, refresh available times for the specific date
                 fetchAvailableTimes(placeId, reservation.tableId, reservation.date)
             } catch (e: Exception) {
                 _uiState.value = ReservationUiState.Error(e.message ?: "Failed to save reservation")
@@ -54,31 +55,14 @@ class SaveReservationViewModel @Inject constructor(
 
                 _availableTimes.value = savedTimes.filterNot { it in reservedTimes }
 
+                // Check if table is fully booked for this specific date
                 if (_availableTimes.value.isEmpty()) {
-                    markTableAsReserved(placeId, tableId)
+                    _uiState.value = ReservationUiState.Success("Table is fully booked for $selectedDate. Please select a different date or table.")
                 }
             } catch (e: Exception) {
                 _uiState.value = ReservationUiState.Error("Failed to fetch available times: ${e.message}")
             }
         }
-    }
-
-    private fun markTableAsReserved(placeId: String, tableId: String) {
-        _uiState.value = ReservationUiState.Loading
-        viewModelScope.launch {
-            try {
-                reservationRepository.markTableAsReserved(placeId, tableId)
-                _uiState.value = ReservationUiState.Success("Table is fully booked and now hidden!")
-                removeTableFromUI(tableId)
-            } catch (e: Exception) {
-                _uiState.value = ReservationUiState.Error("Failed to mark table as reserved: ${e.message}")
-            }
-        }
-    }
-
-    private fun removeTableFromUI(tableId: String) {
-        val currentDesignItems = (_designState.value as? RootResult.Success<List<DesignItem>>)?.data ?: emptyList()
-        _designState.value = RootResult.Success(currentDesignItems.filterNot { it.designId == tableId })
     }
 }
 

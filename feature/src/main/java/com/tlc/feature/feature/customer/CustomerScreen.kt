@@ -1,35 +1,26 @@
 package com.tlc.feature.feature.customer
 
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -42,32 +33,56 @@ import com.tlc.domain.utils.RootResult
 import com.tlc.feature.feature.auth.login.viewmodel.LoginViewModel
 import com.tlc.feature.feature.customer.viewmodel.CustomerViewModel
 import com.tlc.feature.navigation.NavigationGraph
+import com.tlc.feature.feature.reservation.util.DatePickerWithDialog
+import com.tlc.feature.navigation.main_datastore.MainDataStore
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "StateFlowValueCalledInComposition")
+@RequiresApi(Build.VERSION_CODES.O)
+@SuppressLint("StateFlowValueCalledInComposition", "UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun CustomerScreen(
     navController: NavHostController,
     viewModel: CustomerViewModel = hiltViewModel(),
     loginViewModel: LoginViewModel = hiltViewModel()
 ) {
-    val placesState by viewModel.placeState.collectAsState()
+    val placesState by viewModel.placesState.collectAsState()
     val designState by viewModel.designState.collectAsState()
     val reservationsState by viewModel.reservationsState.collectAsState()
-    var showDesignPreview by remember { mutableStateOf(false) }
+    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
+    val role by viewModel.role.collectAsState()
+    val fullyBookedTables by viewModel.fullyBookedTables.collectAsState()
+    
     var selectedPlaceId by remember { mutableStateOf<String?>(null) }
     var selectedPlace by remember { mutableStateOf<Place?>(null) }
+    var showDesignPreview by remember { mutableStateOf(false) }
+    var selectedDate by remember { mutableStateOf("") }
 
-    val isLoggedIn = loginViewModel.loggingState.collectAsState()
-    val role = loginViewModel.loggingState.value.data
+    // Get login state from login view model
+    val loginState = loginViewModel.loggingState.collectAsState()
+    val isUserLoggedIn = loginState.value.transaction
+    val userRole = loginState.value.data ?: ""
+
+    // Initialize date picker with current date
+    LaunchedEffect(Unit) {
+        val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        selectedDate = currentDate
+        // Update view model with login state
+        viewModel.updateLoginState(isUserLoggedIn, userRole)
+    }
 
     LaunchedEffect(Unit) {
         Log.d("CustomerScreen", "LaunchedEffect triggered, fetching places")
         viewModel.fetchPlaces()
+    }
+
+    LaunchedEffect(designState.result, selectedDate, selectedPlaceId) {
+        if (designState.result is RootResult.Success && selectedDate.isNotEmpty() && selectedPlaceId != null) {
+            val designItems = (designState.result as RootResult.Success<List<DesignItem>>).data ?: emptyList()
+            viewModel.fetchFullyBookedTables(selectedPlaceId!!, selectedDate, designItems)
+        }
     }
 
     Scaffold(
@@ -79,6 +94,75 @@ fun CustomerScreen(
                         .background(Color.White)
                 ) {
                     Column {
+                        // Header with back button and date picker
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(
+                                onClick = { 
+                                    showDesignPreview = false
+                                    selectedPlaceId = null
+                                    selectedPlace = null
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.Black
+                                )
+                            }
+                            
+                            Text(
+                                text = selectedPlace?.name ?: "Select Table",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                            
+                            Spacer(modifier = Modifier.width(80.dp))
+                        }
+                        
+                        // Date Selection Section
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Select Date",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.Black,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                            
+                            DatePickerWithDialog(
+                                modifier = Modifier.fillMaxWidth(),
+                                onDateSelected = { date ->
+                                    selectedDate = date
+                                    // Fetch reservations for the new date
+                                    if (selectedPlaceId != null) {
+                                        viewModel.fetchReservations(selectedPlaceId!!, date)
+                                    }
+                                }
+                            )
+                            
+                            if (selectedDate.isNotEmpty()) {
+                                Text(
+                                    text = "Available tables for: $selectedDate",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+                            }
+                        }
+
+                        // Table Preview
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -97,14 +181,17 @@ fun CustomerScreen(
                                     val designItems =
                                         (designState.result as RootResult.Success<List<DesignItem>>).data
                                             ?: emptyList()
-                                    DesignPreview(
-                                        designItems,
+                                    DateSpecificDesignPreview(
+                                        designItems = designItems,
+                                        reservations = reservationsState,
+                                        selectedDate = selectedDate,
+                                        place = selectedPlace,
+                                        fullyBookedTables = fullyBookedTables,
                                         onTableClick = { selectedTable ->
                                             if (selectedPlaceId != null) {
                                                 navController.navigate("save_reservation_screen/${selectedPlaceId}/${selectedTable.designId}")
                                             }
-                                        },
-                                        reservations = reservationsState
+                                        }
                                     )
                                 }
 
@@ -149,21 +236,15 @@ fun CustomerScreen(
                                             selectedPlaceId = place.id
                                             selectedPlace = place
                                             
-                                            if (isLoggedIn.value.transaction) {
+                                            if (isUserLoggedIn) {
                                                 // If logged in as admin, navigate to admin screen
-                                                if (role == "admin") {
+                                                if (userRole == "admin") {
                                                     navController.navigate(NavigationGraph.ADMIN_SCREEN.route)
                                                 } else {
                                                     // If logged in as customer, show design
                                                     viewModel.fetchDesign(place.id)
-                                                    val currentDate = SimpleDateFormat(
-                                                        "yyyy-MM-dd",
-                                                        Locale.getDefault()
-                                                    ).format(Date())
-                                                    viewModel.fetchReservations(
-                                                        place.id,
-                                                        date = currentDate
-                                                    )
+                                                    // Fetch reservations for the selected date
+                                                    viewModel.fetchReservations(place.id, selectedDate)
                                                     showDesignPreview = true
                                                 }
                                             } else {
@@ -213,55 +294,122 @@ fun PlaceItem(place: Place, onClick: () -> Unit) {
 
 
 @Composable
-fun DesignPreview(
+fun DateSpecificDesignPreview(
     designItems: List<DesignItem>,
     reservations: List<Reservation>,
+    selectedDate: String,
+    place: Place?,
+    fullyBookedTables: Set<String>,
     onTableClick: (DesignItem) -> Unit = {}
 ) {
     val density = LocalDensity.current.density
 
-    // Get a list of reserved table IDs from the reservations
-    val reservedTableIds = designItems.filter { it.isReserved }.map { it.designId }
-
-// Get a list of available table IDs (not reserved)
-
-// Log reserved and available table IDs
-    Log.d("DesignPreview", "Reserved Table IDs: $reservedTableIds")
-
-
-// Instead of filtering out reserved tables, ensure only available ones are selectable
-    // If there are no reservations, show all tables
-    val availableDesignItems =
-        designItems.filter { it.type == "TABLE" && it.designId !in reservedTableIds }
+    // Filter out tables that are globally reserved or fully booked for the selected date
+    val availableDesignItems = designItems.filter { item ->
+        item.type == "TABLE" && 
+        !item.isReserved && 
+        item.designId !in fullyBookedTables
+    }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(600.dp)
+            .height(500.dp)
             .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
         if (availableDesignItems.isEmpty()) {
-            Text(
-                text = "No Available Tables",
-                color = Color.Black
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "No Available Tables",
+                    color = Color.Black,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "for $selectedDate",
+                    color = Color.Gray,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         } else {
             Box(modifier = Modifier.fillMaxSize()) {
-                availableDesignItems.forEach { item ->
-                    // Show available tables (those that are not reserved)
+                // Show all tables with different colors based on availability
+                designItems.filter { it.type == "TABLE" }.forEach { item ->
+                    val isAvailable = item.designId in availableDesignItems.map { it.designId }
+                    val isFullyBooked = item.designId in fullyBookedTables
+                    val isGloballyReserved = item.isReserved
+                    
+                    val tableColor = when {
+                        isGloballyReserved -> Color.Gray // Globally reserved
+                        isFullyBooked -> Color.Yellow // Fully booked for this date
+                        isAvailable -> Color.Green // Available
+                        else -> Color.Red // Default
+                    }
+                    
+                    val tableText = when {
+                        isGloballyReserved -> "R"
+                        isFullyBooked -> "F"
+                        isAvailable -> "A"
+                        else -> "X"
+                    }
+                    
                     Box(
                         modifier = Modifier
                             .offset(
                                 (item.xPosition / density).dp,
                                 (item.yPosition / density).dp
                             )
-                            .size(30.dp)
-                            .background(Color.Red)
-                            .clickable {
-                                onTableClick(item)
-                            }
-
+                            .size(40.dp)
+                            .background(tableColor)
+                            .clickable(enabled = isAvailable) {
+                                if (isAvailable) {
+                                    onTableClick(item)
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = tableText,
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                
+                // Legend
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp)
+                        .background(Color.White.copy(alpha = 0.9f))
+                        .padding(8.dp)
+                ) {
+                    Text(
+                        text = "Legend:",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = "🟢 Available",
+                        fontSize = 10.sp,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = "🟡 Fully Booked",
+                        fontSize = 10.sp,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = "⚫ Reserved",
+                        fontSize = 10.sp,
+                        color = Color.Black
                     )
                 }
             }
