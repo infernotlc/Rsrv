@@ -65,13 +65,14 @@ fun SaveReservationScreen(
     var selectedTime by remember { mutableStateOf<String?>(null) }
     var selectedCount by remember { mutableStateOf<Int?>(null) }
     var selectedAnimalCount by remember { mutableStateOf<Int?>(null) }
+    var selectedTableId by remember { mutableStateOf(tableId) }
 
     val availableTimes by viewModel.availableTimes.collectAsState(initial = emptyList())
     val currentUser = FirebaseAuth.getInstance().currentUser
 
-    LaunchedEffect(date) { // Fetch times whenever date changes
-        if (date.isNotBlank()) {
-            viewModel.fetchAvailableTimes(placeId, tableId, date)
+    LaunchedEffect(date, selectedTableId) { // Fetch times whenever date or table changes
+        if (date.isNotBlank() && selectedTableId.isNotBlank()) {
+            viewModel.fetchAvailableTimes(placeId, selectedTableId, date)
         }
     }
 
@@ -140,6 +141,50 @@ fun SaveReservationScreen(
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
+
+                    // Table Selection Section (only show if no tableId provided)
+                    if (tableId.isEmpty()) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Table Selection",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                            
+                            Text(
+                                text = "Please select a table first to continue with your reservation",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center
+                            )
+                            
+                            // Simple table selection - you can enhance this with actual table data
+                            Button(
+                                onClick = { selectedTableId = "table_1" }, // Placeholder - replace with actual table selection
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                            ) {
+                                Text("Select Table 1", color = Color.White)
+                            }
+                            
+                            Button(
+                                onClick = { selectedTableId = "table_2" }, // Placeholder - replace with actual table selection
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                            ) {
+                                Text("Select Table 2", color = Color.White)
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
 
                     // Date and Time Section
                     Column(
@@ -241,7 +286,7 @@ fun SaveReservationScreen(
                                     userId = userId,
                                     placeId = placeId,
                                     placeName = "", // This will be set by the repository
-                                    tableId = tableId,
+                                    tableId = selectedTableId,
                                     holderName = customerName,
                                     holderPhoneNo = customerPhoneNo,
                                     customerCount = selectedCount!!,
