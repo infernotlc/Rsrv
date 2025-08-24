@@ -13,7 +13,10 @@ enum class NavigationGraph(val route: String) {
     ADMIN_SCREEN("admin_screen"),
     DESIGN_SCREEN("design_screen/{placeData}"),
     CUSTOMER_SCREEN("customer_screen"),
+    PLACE_DETAILS_SCREEN("place_details_screen/{placeData}"),
+    CUSTOMER_TABLE_SELECTION_SCREEN("customer_table_selection_screen/{placeData}"),
     SAVE_RESERVATION_SCREEN("save_reservation_screen/{placeId}/{tableId}"),
+    SAVE_RESERVATION_SCREEN_WITH_PLACE("save_reservation_screen/{placeId}"),
     PROFILE_SCREEN("profile_screen"),
     ADMIN_PROFILE_SCREEN("admin_profile_screen"),
     CUSTOMER_RESERVATIONS_SCREEN("reservations_screen"),
@@ -26,6 +29,31 @@ enum class NavigationGraph(val route: String) {
             val encodedPlaceJson = URLEncoder.encode(placeJson, StandardCharsets.UTF_8.toString())
             return "design_screen/$encodedPlaceJson"
         }
+        fun getPlaceDetailsRoute(place: Place): String {
+            val gson = Gson()
+            val placeJson = gson.toJson(place)
+            val encodedPlaceJson = URLEncoder.encode(placeJson, StandardCharsets.UTF_8.toString())
+            return "place_details_screen/$encodedPlaceJson"
+        }
+
+        fun getSaveReservationRoute(placeId: String, tableId: String): String {
+            return "save_reservation_screen/$placeId/$tableId"
+        }
+
+        fun getSaveReservationWithPlaceRoute(placeId: String): String {
+            return "save_reservation_screen/$placeId"
+        }
+
+        fun getCustomerTableSelectionRoute(place: Place): String {
+            val gson = Gson()
+            val placeJson = gson.toJson(place)
+            val encodedPlaceJson = URLEncoder.encode(placeJson, StandardCharsets.UTF_8.toString())
+            return "customer_table_selection_screen/$encodedPlaceJson"
+        }
+
+
+
+
 
         // For showing/hiding the navigation drawer
         fun shouldShowNavigationDrawer(route: String): Boolean {
@@ -37,7 +65,9 @@ enum class NavigationGraph(val route: String) {
                 route == ADMIN_SCREEN.route -> true
                 route == CUSTOMER_SCREEN.route -> true
                 route.startsWith("design_screen/") -> true
-                route == SAVE_RESERVATION_SCREEN.route -> true
+                route.startsWith("place_details_screen/") -> true
+                route.startsWith("customer_table_selection_screen/") -> true
+                route.startsWith("save_reservation_screen/") -> true
                 route == PROFILE_SCREEN.route -> true
                 route == ADMIN_PROFILE_SCREEN.route -> true
                 route == ADMIN_RESERVATIONS_SCREEN.route -> true
@@ -57,6 +87,8 @@ enum class NavigationGraph(val route: String) {
                 route == ADMIN_PROFILE_SCREEN.route -> true
                 route == ADMIN_RESERVATIONS_SCREEN.route -> true
                 route.startsWith("design_screen/") -> true
+                route.startsWith("place_details_screen/") -> true
+                route.startsWith("customer_table_selection_screen/") -> true
                 route.startsWith("save_reservation_screen/") -> true
                 else -> false
             }
