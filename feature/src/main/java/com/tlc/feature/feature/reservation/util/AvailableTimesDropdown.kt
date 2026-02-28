@@ -54,7 +54,7 @@ fun AvailableTimesDropdown(
             ) {
                 IconButton(onClick = { expanded = true }) {
                     Icon(
-                        painterResource(R.drawable.baseline_access_time_24),
+                        painterResource(R.drawable.ic_left),
                         contentDescription = "Select Time"
                     )
                 }

@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -91,6 +92,10 @@ class ReservationRepositoryImpl @Inject constructor(
 
             // Commit all operations
             batch.commit().await()
+
+            // Check if table is now fully booked and update status
+            val isFullyBooked = isTableFullyBookedForDate(placeId, reservation.tableId, reservation.date)
+            updateTableFullyBookedStatus(placeId, reservation.tableId, reservation.date, isFullyBooked)
 
             Log.d("ReservationRepository", "Reservation saved successfully with date document")
             Result.success(Unit)
@@ -210,6 +215,86 @@ class ReservationRepositoryImpl @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Checks if a table is fully booked for a specific date
+     * @param placeId The place ID
+     * @param tableId The table ID
+     * @param date The date to check
+     * @return true if the table is fully booked for that date, false otherwise
+     */
+    override suspend fun isTableFullyBookedForDate(placeId: String, tableId: String, date: String): Boolean {
+        return try {
+            val adminUserId = getAdminUserIdByPlace(placeId) ?: return false
+
+            // Total number of time slots is based on the place's saved reservation times
+            val totalAvailableTimeSlots = getSavedReservationTimes(placeId).first().size
+                .takeIf { it > 0 } ?: 8
+
+            // Get reserved times for this table on this date
+            val reservedTimes = getReservedTimesFromFirestore(placeId, tableId, date)
+
+            Log.d(
+                "ReservationRepository",
+                "Table $tableId: ${reservedTimes.size} reserved slots out of $totalAvailableTimeSlots total slots"
+            )
+
+            reservedTimes.size >= totalAvailableTimeSlots
+        } catch (e: Exception) {
+            Log.e("ReservationRepository", "Error checking if table is fully booked", e)
+            false
+        }
+    }
+
+    /**
+     * Updates the fully booked status for a table on a specific date
+     * @param placeId The place ID
+     * @param tableId The table ID
+     * @param date The date
+     * @param isFullyBooked Whether the table is fully booked
+     */
+    private suspend fun updateTableFullyBookedStatus(
+        placeId: String, 
+        tableId: String, 
+        date: String, 
+        isFullyBooked: Boolean
+    ) {
+        try {
+            val adminUserId = getAdminUserIdByPlace(placeId) ?: return
+            
+            val dateDocRef = firestore.document("users/$adminUserId/places/$placeId/design/$tableId/reservations/$date")
+            dateDocRef.update("fullyBooked", isFullyBooked).await()
+            
+            Log.d("ReservationRepository", "Updated table $tableId fully booked status to $isFullyBooked for date $date")
+        } catch (e: Exception) {
+            Log.e("ReservationRepository", "Error updating fully booked status", e)
+        }
+    }
+
+    /**
+     * Gets the fully booked status for a table on a specific date from the document
+     * @param placeId The place ID
+     * @param tableId The table ID
+     * @param date The date
+     * @return true if the table is fully booked for that date, false otherwise
+     */
+    override suspend fun getTableFullyBookedStatus(placeId: String, tableId: String, date: String): Boolean {
+        return try {
+            val adminUserId = getAdminUserIdByPlace(placeId) ?: return false
+            
+            val dateDocRef = firestore.document("users/$adminUserId/places/$placeId/design/$tableId/reservations/$date")
+            val dateDoc = dateDocRef.get().await()
+            
+            if (dateDoc.exists()) {
+                dateDoc.getBoolean("fullyBooked") ?: false
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("ReservationRepository", "Error getting fully booked status", e)
+            false
         }
     }
 
@@ -541,6 +626,10 @@ class ReservationRepositoryImpl @Inject constructor(
             
             // Commit all operations
             batch.commit().await()
+            
+            // Check if table is still fully booked after cancellation and update status
+            val isFullyBooked = isTableFullyBookedForDate(placeId, tableId, date)
+            updateTableFullyBookedStatus(placeId, tableId, date, isFullyBooked)
             
             Log.d("ReservationRepository", "Reservation cancelled successfully with notes: $cancellationNotes")
             Result.success(Unit)
