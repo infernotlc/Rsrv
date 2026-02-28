@@ -32,11 +32,16 @@ class SaveReservationViewModel @Inject constructor(
         _uiState.value = ReservationUiState.Loading
         viewModelScope.launch {
             try {
-                reservationRepository.saveReservation(placeId, reservation)
-                _uiState.value = ReservationUiState.Success("Reservation saved successfully!")
-
-                // After saving, refresh available times for the specific date
-                fetchAvailableTimes(placeId, reservation.tableId, reservation.date)
+                val result = reservationRepository.saveReservation(placeId, reservation)
+                if (result.isSuccess) {
+                    _uiState.value = ReservationUiState.Success("Reservation saved successfully!")
+                    // After saving, refresh available times for the specific date
+                    fetchAvailableTimes(placeId, reservation.tableId, reservation.date)
+                } else {
+                    _uiState.value = ReservationUiState.Error(
+                        result.exceptionOrNull()?.message ?: "Failed to save reservation"
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.value = ReservationUiState.Error(e.message ?: "Failed to save reservation")
             }
