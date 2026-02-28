@@ -12,6 +12,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -73,7 +77,14 @@ class SaveReservationViewModel @Inject constructor(
                 val savedTimes = reservationRepository.getSavedReservationTimes(placeId).first()
                 val reservedTimes = reservationRepository.getReservedTimesFromFirestore(placeId, tableId, selectedDate)
 
-                _availableTimes.value = savedTimes.filterNot { it in reservedTimes }
+                var times = savedTimes.filterNot { it in reservedTimes }
+
+                // If selected date is today, hide times that are already in the past
+                if (isSelectedDateToday(selectedDate)) {
+                    times = times.filter { isTimeAfterNow(it) }
+                }
+
+                _availableTimes.value = times
 
                 // Informational message for fully booked table without overriding reservation status
                 _availabilityMessage.value = if (_availableTimes.value.isEmpty()) {
@@ -84,6 +95,40 @@ class SaveReservationViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = ReservationUiState.Error("Failed to fetch available times: ${e.message}")
             }
+        }
+    }
+
+    /**
+     * Returns true if [selectedDate] is the current day.
+     * Supports "yyyy-MM-dd" (e.g. from nav) and "dd MMM yyyy" (e.g. from DatePicker).
+     */
+    private fun isSelectedDateToday(selectedDate: String): Boolean {
+        if (selectedDate.isBlank()) return false
+        return try {
+            val today = LocalDate.now()
+            val parsed = when {
+                selectedDate.contains("-") && selectedDate.length == 10 ->
+                    LocalDate.parse(selectedDate)
+                else ->
+                    LocalDate.parse(selectedDate, DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault()))
+            }
+            parsed == today
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /**
+     * Returns true if [timeString] (e.g. "14:00" or "9:00") is after the current time.
+     */
+    private fun isTimeAfterNow(timeString: String): Boolean {
+        if (timeString.isBlank()) return false
+        return try {
+            val formatter = DateTimeFormatter.ofPattern("H:mm", Locale.getDefault())
+            val time = LocalTime.parse(timeString.trim(), formatter)
+            time.isAfter(LocalTime.now())
+        } catch (_: Exception) {
+            true
         }
     }
 }
