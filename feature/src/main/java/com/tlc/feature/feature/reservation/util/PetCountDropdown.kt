@@ -57,7 +57,7 @@ fun PetCountDropdown(
             ) {
                 IconButton(onClick = { expanded = true }) {
                     Icon(
-                        painterResource(R.drawable.dog),
+                        painterResource(R.drawable.ic_left),
                         contentDescription = null
                     )
                 }

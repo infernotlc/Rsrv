@@ -1,15 +1,16 @@
 package com.tlc.feature.feature.customer
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.os.Build
 import androidx.annotation.RequiresApi
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -18,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -37,6 +40,7 @@ import com.tlc.feature.feature.customer.viewmodel.CustomerViewModel
 import com.tlc.feature.navigation.NavigationGraph
 import com.tlc.feature.feature.reservation.util.DatePickerWithDialog
 import com.tlc.feature.navigation.main_datastore.MainDataStore
+import coil.compose.rememberAsyncImagePainter
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
@@ -306,11 +310,11 @@ fun CustomerScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
-                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                            brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    Color(0xFF1A237E),
-                                    Color(0xFF3949AB),
-                                    Color(0xFF5C6BC0)
+                                    Color(0xFF0D47A1),
+                                    Color(0xFF1976D2),
+                                    Color(0xFF42A5F5)
                                 )
                             )
                         )
@@ -486,12 +490,51 @@ fun EnhancedPlaceItem(place: Place, onClick: () -> Unit, navController: NavHostC
             .fillMaxWidth()
             .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFDFDFE)),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
-        ) {
+        Column {
+            if (place.placeImageUrl.isNotBlank()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(place.placeImageUrl),
+                        contentDescription = place.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomStart)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color(0xAA000000)
+                                    )
+                                )
+                            )
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = "${place.city}, ${place.country}",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -563,8 +606,8 @@ fun EnhancedPlaceItem(place: Place, onClick: () -> Unit, navController: NavHostC
                         shape = RoundedCornerShape(18.dp)
                     ) {
                         Text(
-                            "View Details", 
-                            color = Color(0xFF1976D2), 
+                            "View Details",
+                            color = Color(0xFF1976D2),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -579,14 +622,15 @@ fun EnhancedPlaceItem(place: Place, onClick: () -> Unit, navController: NavHostC
                         shape = RoundedCornerShape(18.dp)
                     ) {
                         Text(
-                            "Reserve Now", 
-                            color = Color.White, 
+                            "Reserve Now",
+                            color = Color.White,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
                         )
                     }
                 }
             }
+        }
         }
     }
 }

@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -227,27 +228,19 @@ class ReservationRepositoryImpl @Inject constructor(
     override suspend fun isTableFullyBookedForDate(placeId: String, tableId: String, date: String): Boolean {
         return try {
             val adminUserId = getAdminUserIdByPlace(placeId) ?: return false
-            
-            // Get the place to check available time slots
-            val placeDoc = firestore.collection("users")
-                .document(adminUserId)
-                .collection("places")
-                .document(placeId)
-                .collection("design")
-                .document("designId")
-                .collection("reservations")
-                .document(date)
-                .get()
-                .await()
-            
-            val place = placeDoc.toObject<Place>()
-            val totalAvailableTimeSlots = place?.reservationTimes?.size ?: 8
-            
+
+            // Total number of time slots is based on the place's saved reservation times
+            val totalAvailableTimeSlots = getSavedReservationTimes(placeId).first().size
+                .takeIf { it > 0 } ?: 8
+
             // Get reserved times for this table on this date
             val reservedTimes = getReservedTimesFromFirestore(placeId, tableId, date)
-            
-            Log.d("ReservationRepository", "Table $tableId: ${reservedTimes.size} reserved slots out of $totalAvailableTimeSlots total slots")
-            
+
+            Log.d(
+                "ReservationRepository",
+                "Table $tableId: ${reservedTimes.size} reserved slots out of $totalAvailableTimeSlots total slots"
+            )
+
             reservedTimes.size >= totalAvailableTimeSlots
         } catch (e: Exception) {
             Log.e("ReservationRepository", "Error checking if table is fully booked", e)
