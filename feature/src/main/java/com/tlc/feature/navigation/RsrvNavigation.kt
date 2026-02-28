@@ -52,7 +52,8 @@ fun RsrvNavigation(
     }
 
     NavHost(
-        navController = navController, startDestination = NavigationGraph.CUSTOMER_SCREEN.route
+        navController = navController,
+        startDestination = mainViewModel.startDestination
     ) {
         composable(NavigationGraph.IS_LOGGED_IN.route) {
             IsLoggedInScreen(navController)

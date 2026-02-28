@@ -86,7 +86,7 @@ fun CustomerScreen(
 
     }
 
-    LaunchedEffect(designState.result, selectedDate, selectedPlaceId) {
+    LaunchedEffect(designState.result, selectedDate, selectedPlaceId, reservationsState) {
         if (designState.result is RootResult.Success && selectedDate.isNotEmpty() && selectedPlaceId != null) {
             val designItems = (designState.result as RootResult.Success<List<DesignItem>>).data ?: emptyList()
             viewModel.fetchFullyBookedTables(selectedPlaceId!!, selectedDate, designItems)

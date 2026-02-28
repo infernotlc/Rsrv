@@ -28,15 +28,30 @@ class SaveReservationViewModel @Inject constructor(
     private val _designState = MutableStateFlow(RootResult.Success<List<DesignItem>>(emptyList()))
     val designState: StateFlow<RootResult<List<DesignItem>>> = _designState.asStateFlow()
 
+    private val _availabilityMessage = MutableStateFlow<String?>(null)
+    val availabilityMessage: StateFlow<String?> = _availabilityMessage.asStateFlow()
+
     fun saveReservation(placeId: String, reservation: Reservation) {
         _uiState.value = ReservationUiState.Loading
         viewModelScope.launch {
             try {
+                // Prevent double booking for the same time slot
+                val reservedTimes = reservationRepository.getReservedTimesFromFirestore(
+                    placeId = placeId,
+                    tableId = reservation.tableId,
+                    date = reservation.date
+                )
+                if (reservation.time in reservedTimes) {
+                    _uiState.value = ReservationUiState.Error(
+                        "This time slot is no longer available. Please choose another time."
+                    )
+                    return@launch
+                }
+
                 val result = reservationRepository.saveReservation(placeId, reservation)
                 if (result.isSuccess) {
                     _uiState.value = ReservationUiState.Success("Reservation saved successfully!")
-                    // After saving, refresh available times for the specific date
-                    fetchAvailableTimes(placeId, reservation.tableId, reservation.date)
+                    _availabilityMessage.value = null
                 } else {
                     _uiState.value = ReservationUiState.Error(
                         result.exceptionOrNull()?.message ?: "Failed to save reservation"
@@ -60,9 +75,11 @@ class SaveReservationViewModel @Inject constructor(
 
                 _availableTimes.value = savedTimes.filterNot { it in reservedTimes }
 
-                // Check if table is fully booked for this specific date
-                if (_availableTimes.value.isEmpty()) {
-                    _uiState.value = ReservationUiState.Success("Table is fully booked for $selectedDate. Please select a different date or table.")
+                // Informational message for fully booked table without overriding reservation status
+                _availabilityMessage.value = if (_availableTimes.value.isEmpty()) {
+                    "Table is fully booked for $selectedDate. Please select a different date or table."
+                } else {
+                    null
                 }
             } catch (e: Exception) {
                 _uiState.value = ReservationUiState.Error("Failed to fetch available times: ${e.message}")
