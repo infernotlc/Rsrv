@@ -164,6 +164,7 @@ fun CustomerScreen(
                                     
                                     DatePickerWithDialog(
                                         modifier = Modifier.fillMaxWidth(),
+                                        selectedDateText = selectedDate,
                                         onDateSelected = { date ->
                                             selectedDate = date
                                             // Fetch reservations for the new date
@@ -269,7 +270,13 @@ fun CustomerScreen(
                                             fullyBookedTables = fullyBookedTables,
                                             onTableClick = { selectedTable ->
                                                 if (selectedPlaceId != null) {
-                                                    navController.navigate("save_reservation_screen/${selectedPlaceId}/${selectedTable.designId}")
+                                                    navController.navigate(
+                                                        NavigationGraph.getSaveReservationRoute(
+                                                            placeId = selectedPlaceId!!,
+                                                            tableId = selectedTable.designId,
+                                                            date = selectedDate
+                                                        )
+                                                    )
                                                 }
                                             }
                                         )
