@@ -144,16 +144,26 @@ fun RsrvNavigation(
                 }
             }
             composable(
-                route = NavigationGraph.SAVE_RESERVATION_SCREEN.route, arguments = listOf(
+                route = NavigationGraph.SAVE_RESERVATION_SCREEN.route,
+                arguments = listOf(
                     navArgument("placeId") { type = NavType.StringType },
                     navArgument("tableId") { type = NavType.StringType },
+                    navArgument("date") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = ""
+                    },
                 )
             ) { backStackEntry ->
                 val placeId = backStackEntry.arguments?.getString("placeId") ?: ""
                 val tableId = backStackEntry.arguments?.getString("tableId") ?: ""
+                val initialDate = backStackEntry.arguments?.getString("date") ?: ""
 
                 SaveReservationScreen(
-                    navController = navController, placeId = placeId, tableId = tableId
+                    navController = navController,
+                    placeId = placeId,
+                    tableId = tableId,
+                    initialDate = initialDate
                 )
                 onTitleChange("Save Your Rsrv")
             }

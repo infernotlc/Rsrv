@@ -59,12 +59,13 @@ import kotlinx.coroutines.delay
 fun SaveReservationScreen(
     navController: NavHostController,
     placeId: String,
-    tableId: String
+    tableId: String,
+    initialDate: String = ""
 ) {
     val viewModel: SaveReservationViewModel = hiltViewModel()
     var customerName by remember { mutableStateOf("") }
     var customerPhoneNo by remember { mutableStateOf("") }
-    var date by remember { mutableStateOf("") }
+    var date by remember { mutableStateOf(initialDate) }
     var selectedTime by remember { mutableStateOf<String?>(null) }
     var selectedCount by remember { mutableStateOf<Int?>(null) }
     var selectedAnimalCount by remember { mutableStateOf<Int?>(null) }
@@ -220,6 +221,7 @@ fun SaveReservationScreen(
                             ) {
                                 DatePickerWithDialog(
                                     modifier = Modifier.weight(1f),
+                                    selectedDateText = date,
                                     onDateSelected = { selectedDate ->
                                         date = selectedDate
                                     }

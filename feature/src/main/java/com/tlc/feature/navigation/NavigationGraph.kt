@@ -15,7 +15,7 @@ enum class NavigationGraph(val route: String) {
     CUSTOMER_SCREEN("customer_screen"),
     PLACE_DETAILS_SCREEN("place_details_screen/{placeData}"),
     CUSTOMER_TABLE_SELECTION_SCREEN("customer_table_selection_screen/{placeData}"),
-    SAVE_RESERVATION_SCREEN("save_reservation_screen/{placeId}/{tableId}"),
+    SAVE_RESERVATION_SCREEN("save_reservation_screen/{placeId}/{tableId}?date={date}"),
     SAVE_RESERVATION_SCREEN_WITH_PLACE("save_reservation_screen/{placeId}"),
     PROFILE_SCREEN("profile_screen"),
     ADMIN_PROFILE_SCREEN("admin_profile_screen"),
@@ -36,8 +36,12 @@ enum class NavigationGraph(val route: String) {
             return "place_details_screen/$encodedPlaceJson"
         }
 
-        fun getSaveReservationRoute(placeId: String, tableId: String): String {
-            return "save_reservation_screen/$placeId/$tableId"
+        fun getSaveReservationRoute(placeId: String, tableId: String, date: String? = null): String {
+            return if (date.isNullOrEmpty()) {
+                "save_reservation_screen/$placeId/$tableId"
+            } else {
+                "save_reservation_screen/$placeId/$tableId?date=$date"
+            }
         }
 
         fun getSaveReservationWithPlaceRoute(placeId: String): String {

@@ -48,6 +48,7 @@ import java.util.Calendar
 @Composable
 fun DatePickerWithDialog(
     modifier: Modifier = Modifier,
+    selectedDateText: String? = null,
     onDateSelected: (String) -> Unit,
 ) {
     val dateState = rememberDatePickerState()
@@ -62,9 +63,11 @@ fun DatePickerWithDialog(
         dateState.selectedDateMillis = null
     }
 
-    val dateToString = millisToLocalDate?.let {
-        DateUtils().dateToString(it)
-    } ?: "Choose Date"
+    val dateToString = when {
+        !selectedDateText.isNullOrBlank() -> selectedDateText
+        millisToLocalDate != null -> DateUtils().dateToString(millisToLocalDate)
+        else -> "Choose Date"
+    }
 
     var showDialog by remember { mutableStateOf(false) }
 
