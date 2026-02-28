@@ -88,45 +88,6 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(navController) {
-        // Initial navigation based on user role
-        if (isInitialNavigation) {
-            isInitialNavigation = false
-            try {
-                // First check login status
-                loginViewModel.isLoggedIn()
-
-                // Wait until login check is complete
-                while (loginViewModel.loggingState.value.isLoading || !loginViewModel.hasCheckedLogin) {
-                    delay(100)
-                }
-
-                val role = loginViewModel.loggingState.value.data
-                val isLoggedIn = loginViewModel.loggingState.value.transaction
-
-                Log.d("MainScreen", "Initial navigation - Role: $role, IsLoggedIn: $isLoggedIn")
-
-                // Only navigate to admin screen if user is logged in as admin
-                if (isLoggedIn && role == "admin") {
-                    Log.d("MainScreen", "User is admin, navigating to admin screen")
-                    navController.navigate(NavigationGraph.ADMIN_SCREEN.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                } else {
-                    // For all other cases (not logged in, or logged in as customer), show customer screen
-                    Log.d("MainScreen", "Showing customer screen")
-                    navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("MainScreen", "Error during initial navigation", e)
-                // Fallback to customer screen in case of error
-                navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
-                    popUpTo(0) { inclusive = true }
-                }
-            }
-        }
-
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val currentTime = System.currentTimeMillis()
             if (destination.route != lastRoute && !isNavigating && (currentTime - lastNavigationTime) > 500) {

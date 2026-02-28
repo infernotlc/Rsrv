@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.google.firebase.Timestamp
@@ -46,9 +47,11 @@ import com.tlc.feature.feature.reservation.util.DatePickerWithDialog
 import com.tlc.feature.feature.reservation.util.PetCountDropdown
 import com.tlc.feature.feature.reservation.util.PhoneNumber
 import com.tlc.feature.feature.reservation.util.RsrvCountDropdown
+import com.tlc.feature.navigation.NavigationGraph
 import com.tlc.feature.feature.reservation.viewmodel.ReservationUiState
 import com.tlc.feature.feature.reservation.viewmodel.SaveReservationViewModel
 import java.util.UUID
+import kotlinx.coroutines.delay
 
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("StateFlowValueCalledInComposition")
@@ -68,7 +71,10 @@ fun SaveReservationScreen(
     var selectedTableId by remember { mutableStateOf(tableId) }
 
     val availableTimes by viewModel.availableTimes.collectAsState(initial = emptyList())
+    val availabilityMessage by viewModel.availabilityMessage.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val currentUser = FirebaseAuth.getInstance().currentUser
+    val context = LocalContext.current
 
     LaunchedEffect(date, selectedTableId) { // Fetch times whenever date or table changes
         if (date.isNotBlank() && selectedTableId.isNotBlank()) {
@@ -227,6 +233,18 @@ fun SaveReservationScreen(
                                 )
                             }
                         }
+                        if (!availabilityMessage.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = availabilityMessage ?: "",
+                                color = Color(0xFFF57C00),
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 32.dp)
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -305,7 +323,8 @@ fun SaveReservationScreen(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Black,
                             contentColor = Color.White
-                        )
+                        ),
+                        enabled = uiState !is ReservationUiState.Loading
                     ) {
                         Text(
                             text = "Save Reservation",
@@ -385,6 +404,18 @@ fun SaveReservationScreen(
             }
         }
     )
+
+    // Navigate away after a successful reservation
+    LaunchedEffect(uiState) {
+        if (uiState is ReservationUiState.Success) {
+            val msg = (uiState as ReservationUiState.Success).message
+            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+            navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
+                popUpTo(NavigationGraph.CUSTOMER_SCREEN.route) { inclusive = true }
+            }
+            viewModel.updateUiState(ReservationUiState.Idle)
+        }
+    }
 }
 
 

@@ -192,7 +192,15 @@ class ReservationRepositoryImpl @Inject constructor(
                 .get()
                 .await()
 
-            snapshot.documents.mapNotNull { it.getString("time") }
+            snapshot.documents.mapNotNull { doc ->
+                val status = doc.getString("status") ?: "active"
+                val time = doc.getString("time")
+                if (status == "cancelled" || time == null) {
+                    null
+                } else {
+                    time
+                }
+            }
         } catch (e: Exception) {
             emptyList()
         }

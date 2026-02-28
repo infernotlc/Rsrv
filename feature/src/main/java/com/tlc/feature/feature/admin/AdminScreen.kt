@@ -106,7 +106,10 @@ fun AdminScreen(
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        selectedImageUri.value = uri
+        // Only update if a new image was actually picked; avoid clearing on cancel
+        if (uri != null) {
+            selectedImageUri.value = uri
+        }
     }
 
     // Initialize permission launcher
