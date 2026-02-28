@@ -319,9 +319,9 @@ fun CustomerScreen(
                         .background(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    Color(0xFF0D47A1),
-                                    Color(0xFF1976D2),
-                                    Color(0xFF42A5F5)
+                                    Color(0xFFA20238),
+                                    Color(0xFFFFFFFF),
+                                    Color(0xFF000000)
                                 )
                             )
                         )
@@ -358,7 +358,7 @@ fun CustomerScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             
                             Text(
-                                text = "Choose your favorite restaurant and make a reservation",
+                                text = "Choose your favorite restaurant-cafe and make a reservation",
                                 fontSize = 16.sp,
                                 color = Color(0xFF666666),
                                 textAlign = TextAlign.Center
