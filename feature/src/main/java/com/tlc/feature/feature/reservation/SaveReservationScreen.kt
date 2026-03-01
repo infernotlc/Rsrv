@@ -52,6 +52,9 @@ import com.tlc.feature.feature.reservation.viewmodel.ReservationUiState
 import com.tlc.feature.feature.reservation.viewmodel.SaveReservationViewModel
 import java.util.UUID
 import kotlinx.coroutines.delay
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("StateFlowValueCalledInComposition")
@@ -65,7 +68,7 @@ fun SaveReservationScreen(
     val viewModel: SaveReservationViewModel = hiltViewModel()
     var customerName by remember { mutableStateOf("") }
     var customerPhoneNo by remember { mutableStateOf("") }
-    var date by remember { mutableStateOf(initialDate) }
+    var date by remember { mutableStateOf(initialDate.toDatePickerFormat()) }
     var selectedTime by remember { mutableStateOf<String?>(null) }
     var selectedCount by remember { mutableStateOf<Int?>(null) }
     var selectedAnimalCount by remember { mutableStateOf<Int?>(null) }
@@ -78,6 +81,7 @@ fun SaveReservationScreen(
     val context = LocalContext.current
 
     LaunchedEffect(date, selectedTableId) { // Fetch times whenever date or table changes
+        selectedTime = null
         if (date.isNotBlank() && selectedTableId.isNotBlank()) {
             viewModel.fetchAvailableTimes(placeId, selectedTableId, date)
         }
@@ -164,14 +168,14 @@ fun SaveReservationScreen(
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
-                            
+
                             Text(
                                 text = "Please select a table first to continue with your reservation",
                                 fontSize = 14.sp,
                                 color = Color.Gray,
                                 textAlign = TextAlign.Center
                             )
-                            
+
                             // Simple table selection - you can enhance this with actual table data
                             Button(
                                 onClick = { selectedTableId = "table_1" }, // Placeholder - replace with actual table selection
@@ -180,7 +184,7 @@ fun SaveReservationScreen(
                             ) {
                                 Text("Select Table 1", color = Color.White)
                             }
-                            
+
                             Button(
                                 onClick = { selectedTableId = "table_2" }, // Placeholder - replace with actual table selection
                                 modifier = Modifier.fillMaxWidth(),
@@ -189,7 +193,7 @@ fun SaveReservationScreen(
                                 Text("Select Table 2", color = Color.White)
                             }
                         }
-                        
+
                         Spacer(modifier = Modifier.height(24.dp))
                     }
 
@@ -207,7 +211,7 @@ fun SaveReservationScreen(
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
-                        
+
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -265,7 +269,7 @@ fun SaveReservationScreen(
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
-                        
+
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -417,6 +421,20 @@ fun SaveReservationScreen(
             }
             viewModel.updateUiState(ReservationUiState.Idle)
         }
+    }
+}
+@RequiresApi(Build.VERSION_CODES.O)
+fun String.toDatePickerFormat(): String {
+    if (isBlank()) return this
+    return try {
+        if (contains("-") && length == 10) {
+            val parsedDate = LocalDate.parse(this)
+            parsedDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault()))
+        } else {
+            this
+        }
+    } catch (_: Exception) {
+        this
     }
 }
 

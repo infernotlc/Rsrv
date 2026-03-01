@@ -44,6 +44,8 @@ import coil.compose.rememberAsyncImagePainter
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -60,6 +62,7 @@ fun CustomerScreen(
     val isLoggedIn by viewModel.isLoggedIn.collectAsState()
     val role by viewModel.role.collectAsState()
     val fullyBookedTables by viewModel.fullyBookedTables.collectAsState()
+    val isTableStatusLoading by viewModel.tableStatusLoading.collectAsState()
     
     var selectedPlaceId by remember { mutableStateOf<String?>(null) }
     var selectedPlace by remember { mutableStateOf<Place?>(null) }
@@ -73,7 +76,7 @@ fun CustomerScreen(
 
     // Initialize date picker with current date
     LaunchedEffect(Unit) {
-        val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault()))
         selectedDate = currentDate
         // Update view model with login state
         viewModel.updateLoginState(isUserLoggedIn, userRole)
@@ -86,14 +89,18 @@ fun CustomerScreen(
 
     }
 
-    LaunchedEffect(designState.result, selectedDate, selectedPlaceId, reservationsState) {
-        if (designState.result is RootResult.Success && selectedDate.isNotEmpty() && selectedPlaceId != null) {
-            val designItems = (designState.result as RootResult.Success<List<DesignItem>>).data ?: emptyList()
-            viewModel.fetchFullyBookedTables(selectedPlaceId!!, selectedDate, designItems)
+        LaunchedEffect(selectedPlaceId, selectedDate) {
+            if (selectedPlaceId != null && selectedDate.isNotEmpty()) {
+                viewModel.fetchReservations(selectedPlaceId!!, selectedDate)
+            }
         }
-    }
-    
 
+        LaunchedEffect(designState.result, selectedDate, selectedPlaceId) {
+            if (designState.result is RootResult.Success && selectedDate.isNotEmpty() && selectedPlaceId != null) {
+                val designItems = (designState.result as RootResult.Success<List<DesignItem>>).data ?: emptyList()
+                viewModel.fetchFullyBookedTables(selectedPlaceId!!, selectedDate, designItems)
+            }
+        }
 
     Scaffold(
         content = {
@@ -167,10 +174,7 @@ fun CustomerScreen(
                                         selectedDateText = selectedDate,
                                         onDateSelected = { date ->
                                             selectedDate = date
-                                            // Fetch reservations for the new date
-                                            if (selectedPlaceId != null) {
-                                                viewModel.fetchReservations(selectedPlaceId!!, date)
-                                            }
+
                                         }
                                     )
                                     
@@ -182,15 +186,26 @@ fun CustomerScreen(
                                             colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E8)),
                                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                                         ) {
-                                            Text(
-                                                text = "Available tables for: $selectedDate",
-                                                fontSize = 14.sp,
-                                                color = Color(0xFF2E7D32),
-                                                textAlign = TextAlign.Center,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(12.dp)
-                                            )
+                                            Column(modifier = Modifier.fillMaxWidth()) {
+                                                Text(
+                                                    text = "Available tables for: $selectedDate",
+                                                    fontSize = 14.sp,
+                                                    color = Color(0xFF2E7D32),
+                                                    textAlign = TextAlign.Center,
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(12.dp)
+                                                )
+                                                if (isTableStatusLoading) {
+                                                    LinearProgressIndicator(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                                                        color = Color(0xFF1976D2),
+                                                        trackColor = Color(0xFFBBDEFB)
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -268,6 +283,7 @@ fun CustomerScreen(
                                             selectedDate = selectedDate,
                                             place = selectedPlace,
                                             fullyBookedTables = fullyBookedTables,
+                                            isTableStatusLoading = isTableStatusLoading,
                                             onTableClick = { selectedTable ->
                                                 if (selectedPlaceId != null) {
                                                     navController.navigate(
@@ -422,8 +438,6 @@ fun CustomerScreen(
                                                 } else {
                                                     // If logged in as customer, show design
                                                     viewModel.fetchDesign(place.id)
-                                                    // Fetch reservations for the selected date
-                                                    viewModel.fetchReservations(place.id, selectedDate)
                                                     showDesignPreview = true
                                                 }
                                             } else {
@@ -647,6 +661,7 @@ fun EnhancedPlaceItem(place: Place, onClick: () -> Unit, navController: NavHostC
 fun DateSpecificDesignPreview(
     designItems: List<DesignItem>,
     reservations: List<Reservation>,
+    isTableStatusLoading: Boolean,
     selectedDate: String,
     place: Place?,
     fullyBookedTables: Set<String>,
@@ -803,6 +818,28 @@ fun DateSpecificDesignPreview(
                                 text = "Permanently Reserved",
                                 fontSize = 12.sp,
                                 color = Color(0xFF666666),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+                if (isTableStatusLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.35f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator(color = Color.White)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "Updating table status...",
+                                color = Color.White,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
                             )
                         }

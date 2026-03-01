@@ -44,6 +44,9 @@ class CustomerViewModel @Inject constructor(
     private val _fullyBookedTables = MutableStateFlow<Set<String>>(emptySet())
     val fullyBookedTables: StateFlow<Set<String>> = _fullyBookedTables.asStateFlow()
 
+    private val _tableStatusLoading = MutableStateFlow(false)
+    val tableStatusLoading: StateFlow<Boolean> = _tableStatusLoading.asStateFlow()
+
     fun fetchPlaces() {
         Log.d("CustomerViewModel", "Fetching places...")
         _placesState.value = GetAllState(isLoading = true, result = Loading)
@@ -76,45 +79,59 @@ class CustomerViewModel @Inject constructor(
 
     fun fetchFullyBookedTables(placeId: String, date: String, designItems: List<DesignItem>) {
         viewModelScope.launch {
-            val fullyBookedTableIds = mutableSetOf<String>()
-            
-            // Check each table to see if it's fully booked
-            designItems.filter { it.type == "TABLE" }.forEach { table ->
-                val isFullyBooked = reservationRepository.getTableFullyBookedStatus(placeId, table.designId, date)
-                if (isFullyBooked) {
-                    fullyBookedTableIds.add(table.designId)
-                    Log.d("CustomerViewModel", "Table ${table.designId} is fully booked for $date")
+            _tableStatusLoading.value = true
+            try {
+                val fullyBookedTableIds = mutableSetOf<String>()
+
+                // Check each table to see if it's fully booked
+                designItems.filter { it.type == "TABLE" }.forEach { table ->
+                    val isFullyBooked = reservationRepository.getTableFullyBookedStatus(placeId, table.designId, date)
+                    if (isFullyBooked) {
+                        fullyBookedTableIds.add(table.designId)
+                        Log.d("CustomerViewModel", "Table ${table.designId} is fully booked for $date")
+                    }
                 }
+
+                _fullyBookedTables.value = fullyBookedTableIds
+            } finally {
+                _tableStatusLoading.value = false
             }
-            
-            _fullyBookedTables.value = fullyBookedTableIds
         }
     }
 
-    fun updateLoginState(isLoggedIn: Boolean, role: String) {
-        _isLoggedIn.value = isLoggedIn
-        _role.value = role
-    }
+            fun updateLoginState(isLoggedIn: Boolean, role: String) {
+                _isLoggedIn.value = isLoggedIn
+                _role.value = role
+            }
 
-    /**
-     * Determines if a table is fully booked for a specific date
-     * @param tableId The ID of the table to check
-     * @param date The date to check
-     * @param availableTimeSlots The total number of available time slots for this place
-     * @return true if the table is fully booked, false otherwise
-     */
-    fun isTableFullyBooked(tableId: String, date: String, availableTimeSlots: Int): Boolean {
-        val tableReservations = _reservationsState.value
-            .filter { it.tableId == tableId && it.date == date && it.status == "active" }
-        
-        val reservedTimeSlots = tableReservations.map { it.time }.distinct()
-        
-        Log.d("CustomerViewModel", "Table $tableId: ${reservedTimeSlots.size} reserved slots out of $availableTimeSlots total slots")
-        Log.d("CustomerViewModel", "Reserved times: $reservedTimeSlots")
-        
-        return reservedTimeSlots.size >= availableTimeSlots
-    }
+            /**
+             * Determines if a table is fully booked for a specific date
+             * @param tableId The ID of the table to check
+             * @param date The date to check
+             * @param availableTimeSlots The total number of available time slots for this place
+             * @return true if the table is fully booked, false otherwise
+             */
+            fun isTableFullyBooked(
+                tableId: String,
+                date: String,
+                availableTimeSlots: Int
+            ): Boolean {
+                val tableReservations = _reservationsState.value
+                    .filter { it.tableId == tableId && it.date == date && it.status == "active" }
 
-}
+                val reservedTimeSlots = tableReservations.map { it.time }.distinct()
+
+                Log.d(
+                    "CustomerViewModel",
+                    "Table $tableId: ${reservedTimeSlots.size} reserved slots out of $availableTimeSlots total slots"
+                )
+                Log.d("CustomerViewModel", "Reserved times: $reservedTimeSlots")
+
+                return reservedTimeSlots.size >= availableTimeSlots
+            }
+
+        }
+
+
 
 

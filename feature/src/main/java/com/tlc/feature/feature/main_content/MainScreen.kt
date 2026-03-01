@@ -34,6 +34,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -78,9 +79,9 @@ fun MainScreen(
     var dialogAction by remember { mutableStateOf("") }
     var navigationKey by remember { mutableIntStateOf(0) }
     var lastRoute by remember { mutableStateOf<String?>(null) }
-    var currentRoute by remember { mutableStateOf<String?>(null) }
+    var currentRoute by remember { mutableStateOf(navController.currentDestination?.route) }
     var isNavigating by remember { mutableStateOf(false) }
-    var lastNavigationTime by remember { mutableStateOf(0L) }
+    var lastNavigationTime by remember { mutableLongStateOf(0L) }
     var isInitialNavigation by remember { mutableStateOf(true) }
     val context = LocalContext.current
 
@@ -89,15 +90,13 @@ fun MainScreen(
 
     LaunchedEffect(navController) {
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            val currentTime = System.currentTimeMillis()
-            if (destination.route != lastRoute && !isNavigating && (currentTime - lastNavigationTime) > 500) {
-                Log.d("MainScreen", "Destination changed to: ${destination.route}")
-                lastRoute = destination.route
-                currentRoute = destination.route
-                lastNavigationTime = currentTime
+            Log.d("MainScreen", "Destination changed to: ${destination.route}")
+            lastRoute = destination.route
+            currentRoute = destination.route
+            lastNavigationTime = System.currentTimeMillis()
             }
         }
-    }
+
 
     // Handle logout navigation
     LaunchedEffect(loggingState.transaction) {
