@@ -172,6 +172,7 @@ fun CustomerScreen(
                                     DatePickerWithDialog(
                                         modifier = Modifier.fillMaxWidth(),
                                         selectedDateText = selectedDate,
+                                        maxDaysFromToday = 7,
                                         onDateSelected = { date ->
                                             selectedDate = date
 

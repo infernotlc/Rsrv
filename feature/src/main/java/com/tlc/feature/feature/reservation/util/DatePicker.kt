@@ -50,11 +50,14 @@ fun DatePickerWithDialog(
     modifier: Modifier = Modifier,
     selectedDateText: String? = null,
     onDateSelected: (String) -> Unit,
+    maxDaysFromToday: Int? = null
 ) {
     val dateState = rememberDatePickerState()
     val calendar = Calendar.getInstance()
     val todayMillis = calendar.timeInMillis
-
+    val maxSelectableMillis = maxDaysFromToday?.let { days ->
+        Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, days) }.timeInMillis
+    }
     val millisToLocalDate = dateState.selectedDateMillis?.let {
         DateUtils().convertMillisToLocalDate(it)
     }
@@ -73,9 +76,14 @@ fun DatePickerWithDialog(
 
     // Handle date selection validation
     LaunchedEffect(dateState.selectedDateMillis) {
-        if (dateState.selectedDateMillis != null && dateState.selectedDateMillis!! < todayMillis) {
-            // Reset the date if it's in the past
-            dateState.selectedDateMillis = todayMillis
+        val selectedMillis = dateState.selectedDateMillis ?: return@LaunchedEffect
+
+        when {
+            selectedMillis < todayMillis -> dateState.selectedDateMillis = todayMillis
+            maxSelectableMillis != null && selectedMillis > maxSelectableMillis -> {
+                dateState.selectedDateMillis = maxSelectableMillis
+            }
+
         }
     }
 
@@ -113,9 +121,10 @@ fun DatePickerWithDialog(
                         confirmButton = {
                             TextButton(onClick = {
                                 showDialog = false
-                                millisToLocalDate?.let {
-                                    val formattedDate = DateUtils().dateToString(it)
-                                    onDateSelected(formattedDate) // Pass the formatted date
+                                dateState.selectedDateMillis?.let { selectedMillis ->
+                                    val selectedDate = DateUtils().convertMillisToLocalDate(selectedMillis)
+                                    val formattedDate = DateUtils().dateToString(selectedDate)
+                                    onDateSelected(formattedDate)
                                 }
                             }) { Text("OK", color = MaterialTheme.colorScheme.primary) }
                         },
