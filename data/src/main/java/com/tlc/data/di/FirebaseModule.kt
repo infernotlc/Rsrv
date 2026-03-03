@@ -1,5 +1,6 @@
 package com.tlc.data.di
 
+import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -18,6 +19,7 @@ import com.tlc.domain.repository.firebase.ReservationRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -57,9 +59,11 @@ object FirebaseModule {
     fun provideReservationRepository(
         firebaseAuth: FirebaseAuth,
         firestore: FirebaseFirestore,
-        storage: FirebaseStorage
+        storage: FirebaseStorage,
+        @ApplicationContext context: Context
+
     ): PlaceRepository {
-        return PlaceRepositoryImpl(firebaseAuth,firestore,storage)
+        return PlaceRepositoryImpl(firebaseAuth,firestore,storage,context)
 
     }
     @Provides
