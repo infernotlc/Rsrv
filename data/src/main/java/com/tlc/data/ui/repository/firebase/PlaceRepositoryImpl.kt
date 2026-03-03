@@ -1,5 +1,9 @@
 package com.tlc.data.ui.repository.firebase
 
+import android.R.attr.bitmap
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
@@ -11,18 +15,21 @@ import com.tlc.data.remote.dto.firebase_dto.PlaceDataDto
 import com.tlc.domain.model.firebase.PlaceData
 import com.tlc.domain.repository.firebase.PlaceRepository
 import com.tlc.domain.utils.RootResult
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
+import java.io.ByteArrayOutputStream
 import java.util.UUID
 import javax.inject.Inject
 
 class PlaceRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
-    private val storage: FirebaseStorage
+    private val storage: FirebaseStorage,
+    @ApplicationContext private val context: Context
 ) : PlaceRepository {
 
     override suspend fun addPlace(placeData: PlaceData): Flow<RootResult<Boolean>> = flow {
@@ -138,13 +145,41 @@ class PlaceRepositoryImpl @Inject constructor(
         flow {
             emit(RootResult.Loading)
             try {
-                val storageRef = storage.reference.child("$imagePathString/${UUID.randomUUID()}.jpg")
-                val uploadTask = storageRef.putFile(uri).await()
+                val imageBytes = compressImage(uri)
+                val storageRef =
+                    storage.reference.child("$imagePathString/${UUID.randomUUID()}.jpg")
+                storageRef.putBytes(imageBytes).await()
                 val downloadUrl = storageRef.downloadUrl.await()
                 emit(RootResult.Success(downloadUrl.toString()))
             } catch (e: Exception) {
                 emit(RootResult.Error(e.message ?: "Image upload failed"))
             }
         }.flowOn(Dispatchers.IO)
+
+
+    private fun compressImage(uri: Uri): ByteArray {
+        val originalBitmap = context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            BitmapFactory.decodeStream(inputStream)
+        } ?: throw IllegalArgumentException("Unable to decode selected image")
+        val resizedBitmap = resizeBitmapIfNeeded(originalBitmap)
+        val outputStream = ByteArrayOutputStream()
+        resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+        if (resizedBitmap != originalBitmap) {
+            resizedBitmap.recycle()
+        }
+        originalBitmap.recycle()
+        return outputStream.toByteArray()
+
+    }
+    private fun resizeBitmapIfNeeded(bitmap: Bitmap, maxDimension: Int = 1280): Bitmap {
+        val largestDimension = maxOf(bitmap.width, bitmap.height)
+        if (largestDimension <= maxDimension) return bitmap
+
+        val scale = maxDimension.toFloat() / largestDimension
+        val targetWidth = (bitmap.width * scale).toInt()
+        val targetHeight = (bitmap.height * scale).toInt()
+
+        return Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+    }
 
 }
