@@ -7,6 +7,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,10 +25,13 @@ import com.tlc.feature.navigation.NavigationGraph
 @Composable
 fun IsLoggedInScreen(navController: NavController, viewModel: LoginViewModel = hiltViewModel()) {
     val loggingState by viewModel.loggingState.collectAsState()
+    var retryCount by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(loggingState) {
-        Log.d("IsLoggedIn", "Logging state: ${loggingState.transaction}, Role: ${loggingState.data}, Loading: ${loggingState.isLoading}")
-
+    LaunchedEffect(loggingState, retryCount) {
+        Log.d(
+            "IsLoggedIn",
+            "Logging state: ${loggingState.transaction}, Role: ${loggingState.data}, Loading: ${loggingState.isLoading}, Retry: $retryCount"
+        )
         if (!loggingState.isLoading) {
             when {
                 loggingState.transaction && loggingState.data == "admin" -> {
@@ -35,6 +41,7 @@ fun IsLoggedInScreen(navController: NavController, viewModel: LoginViewModel = h
                         }
                     }
                 }
+
                 loggingState.transaction && loggingState.data == "customer" -> {
                     navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
                         popUpTo(NavigationGraph.CUSTOMER_SCREEN.route) {
@@ -42,6 +49,11 @@ fun IsLoggedInScreen(navController: NavController, viewModel: LoginViewModel = h
                         }
                     }
                 }
+                FirebaseAuth.getInstance().currentUser != null && retryCount < 1 -> {
+                    retryCount += 1
+                    viewModel.updateLoginState()
+                }
+
                 else -> {
                     navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
                         popUpTo(NavigationGraph.CUSTOMER_SCREEN.route) {
