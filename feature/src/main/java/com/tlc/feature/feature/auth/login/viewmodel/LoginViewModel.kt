@@ -129,7 +129,7 @@ import javax.inject.Inject
                             isCheckingLogin = false
                             isInitialized = false
 
-                            Log.d("LoginViewModel", "Sign out successful, navigating to login screen")
+                            Log.d("LoginViewModel", "Sign out successful, navigating to customer screen")
                             navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
                                 popUpTo(0) { inclusive = true }
                             }

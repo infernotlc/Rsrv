@@ -1,8 +1,10 @@
 package com.tlc.feature.feature.main_content
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -62,6 +64,7 @@ import com.tlc.feature.navigation.RsrvNavigation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -102,7 +105,7 @@ fun MainScreen(
     LaunchedEffect(loggingState.transaction) {
         if (!loggingState.transaction && !isNavigating && currentRoute != NavigationGraph.LOGIN.route) {
             // When logged out, navigate to login screen
-            Log.d("MainScreen", "User logged out, navigating to login screen")
+            Log.d("MainScreen", "User logged out, navigating to customer screen")
             isNavigating = true
             loginViewModel.updateLoginState()
             navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
@@ -117,10 +120,10 @@ fun MainScreen(
     LaunchedEffect(uiState.user, loggingState.transaction) {
         if (!loggingState.isLoading) {
             if (uiState.user == null && (currentRoute == NavigationGraph.PROFILE_SCREEN.route || currentRoute == NavigationGraph.ADMIN_PROFILE_SCREEN.route)) {
-                Log.d("MainScreen", "User logged out while on profile, navigating to login screen")
+                Log.d("MainScreen", "User logged out while on profile, navigating to customer screen")
                 isNavigating = true
                 loginViewModel.updateLoginState()
-                navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
+                navController.navigate(NavigationGraph.LOGIN.route) {
                     popUpTo(0) { inclusive = true }
                 }
                 delay(500)

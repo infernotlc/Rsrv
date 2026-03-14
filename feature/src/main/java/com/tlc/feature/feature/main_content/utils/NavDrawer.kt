@@ -72,11 +72,8 @@ fun NavDrawer(
                 onClick = {
                     when (item) {
                         "Home" -> {
-                            val currentRoute = navController.currentDestination?.route ?: ""
-                            if (currentRoute.startsWith("design_screen/") || 
-                                currentRoute == NavigationGraph.ADMIN_SCREEN.route ||
-                                currentRoute == NavigationGraph.ADMIN_PROFILE_SCREEN.route ||
-                                currentRoute == NavigationGraph.ADMIN_RESERVATIONS_SCREEN.route) {
+                            val role = loginState.data
+                            if (role == "admin") {
                                 navController.navigate(NavigationGraph.ADMIN_SCREEN.route) {
                                     popUpTo(navController.graph.startDestinationId)
                                     launchSingleTop = true

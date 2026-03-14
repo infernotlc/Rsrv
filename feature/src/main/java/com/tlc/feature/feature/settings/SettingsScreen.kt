@@ -15,6 +15,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -24,14 +27,25 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.tlc.feature.feature.auth.login.viewmodel.LoginViewModel
 import com.tlc.feature.navigation.NavigationGraph
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun SettingsScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    loginViewModel: LoginViewModel = hiltViewModel()
 ) {
+    val loginState by loginViewModel.loggingState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        loginViewModel.isLoggedIn()
+    }
+
+    val isCustomer = loginState.data == "customer"
+
     Scaffold(
         containerColor = Color.Black,
         content = {
@@ -52,14 +66,16 @@ fun SettingsScreen(
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    onClick = {
-                        navController.navigate(NavigationGraph.YOUR_PLACE_SCREEN.route)
-                    },
-                    modifier = Modifier
-                        .height(48.dp)
-                ) {
-                    Text(text = "Your Place")
+                if (isCustomer) {
+                    Button(
+                        onClick = {
+                            navController.navigate(NavigationGraph.YOUR_PLACE_SCREEN.route)
+                        },
+                        modifier = Modifier
+                            .height(48.dp)
+                    ) {
+                        Text(text = "Your Place")
+                    }
                 }
             }
         }

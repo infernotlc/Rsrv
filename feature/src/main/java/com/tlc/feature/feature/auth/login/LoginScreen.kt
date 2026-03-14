@@ -26,6 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.google.firebase.firestore.FirebaseFirestore
 import com.tlc.feature.R
 import com.tlc.feature.feature.auth.login.viewmodel.LoginViewModel
 import com.tlc.feature.feature.component.LoadingLottie
@@ -36,6 +37,7 @@ import com.tlc.feature.feature.component.auth_components.ClickableLoginTextCompo
 import com.tlc.feature.feature.component.auth_components.PasswordFieldComponent
 import com.tlc.feature.navigation.MainViewModel
 import com.tlc.feature.navigation.NavigationGraph
+import kotlinx.coroutines.tasks.await
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -71,8 +73,30 @@ fun LoginScreen(
                     }
                 }
                 "customer" -> {
-                    navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
-                        popUpTo(NavigationGraph.CUSTOMER_SCREEN.route) {
+                    val currentUser = uiState.user
+                    val hasLocation = currentUser?.let { user ->
+                        try {
+                            val snapshot = FirebaseFirestore.getInstance()
+                                .collection("users")
+                                .document(user.uid)
+                                .get()
+                                .await()
+                            val country = snapshot.getString("country")
+                            val city = snapshot.getString("city")
+                            !country.isNullOrBlank() && !city.isNullOrBlank()
+                        } catch (_: Exception) {
+                            false
+                        }
+                    } ?: false
+
+                    val targetRoute = if (hasLocation) {
+                        NavigationGraph.CUSTOMER_SCREEN.route
+                    } else {
+                        NavigationGraph.YOUR_PLACE_SCREEN.route
+                    }
+
+                    navController.navigate(targetRoute) {
+                        popUpTo(targetRoute) {
                             inclusive = true
 
                         }

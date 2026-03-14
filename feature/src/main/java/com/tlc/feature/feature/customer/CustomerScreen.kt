@@ -5,6 +5,7 @@ import android.util.Log
 import android.os.Build
 import androidx.annotation.RequiresApi
 import android.widget.Toast
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -70,6 +71,7 @@ fun CustomerScreen(
     val isTableStatusLoading by viewModel.tableStatusLoading.collectAsState()
 
     var userCity by remember { mutableStateOf<String?>(null) }
+    var userCountry by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     
     var selectedPlaceId by remember { mutableStateOf<String?>(null) }
@@ -102,9 +104,11 @@ fun CustomerScreen(
                     .await()
                 val city = snapshot.getString("city")
                 userCity = city
+                val country = snapshot.getString("country")
+                userCountry = country
 
-                // If customer and no city is set, force them to Your Place screen
-                if ((userRole == "customer" || userRole.isEmpty()) && (city == null || city.isEmpty())) {
+                // If customer and location is incomplete, force them to Your Place screen
+                if (userRole == "customer" && (city.isNullOrBlank() || country.isNullOrBlank())) {
                     navController.navigate(NavigationGraph.YOUR_PLACE_SCREEN.route)
                 }
             } catch (_: Exception) {

@@ -15,11 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.tlc.feature.R
 import com.tlc.feature.feature.auth.login.state.IsLoggedInState
 import com.tlc.feature.feature.auth.login.viewmodel.LoginViewModel
 import com.tlc.feature.feature.component.LoadingLottie
 import com.tlc.feature.navigation.NavigationGraph
+import kotlinx.coroutines.tasks.await
 
 
 @Composable
@@ -43,8 +45,30 @@ fun IsLoggedInScreen(navController: NavController, viewModel: LoginViewModel = h
                 }
 
                 loggingState.transaction && loggingState.data == "customer" -> {
-                    navController.navigate(NavigationGraph.CUSTOMER_SCREEN.route) {
-                        popUpTo(NavigationGraph.CUSTOMER_SCREEN.route) {
+                    val currentUser = FirebaseAuth.getInstance().currentUser
+                    val hasLocation = currentUser?.let { user ->
+                        try {
+                            val snapshot = FirebaseFirestore.getInstance()
+                                .collection("users")
+                                .document(user.uid)
+                                .get()
+                                .await()
+                            val country = snapshot.getString("country")
+                            val city = snapshot.getString("city")
+                            !country.isNullOrBlank() && !city.isNullOrBlank()
+                        } catch (_: Exception) {
+                            false
+                        }
+                    } ?: false
+
+                    val targetRoute = if (hasLocation) {
+                        NavigationGraph.CUSTOMER_SCREEN.route
+                    } else {
+                        NavigationGraph.YOUR_PLACE_SCREEN.route
+                    }
+
+                    navController.navigate(targetRoute) {
+                        popUpTo(targetRoute) {
                             inclusive = true
                         }
                     }
