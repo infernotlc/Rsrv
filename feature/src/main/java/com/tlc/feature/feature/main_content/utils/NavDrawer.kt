@@ -89,7 +89,10 @@ fun NavDrawer(
                             }
                         }
                         "Settings" -> {
-                           //TODO
+                            val currentRoute = navController.currentDestination?.route ?: ""
+                            if (currentRoute != NavigationGraph.SETTINGS_SCREEN.route) {
+                                navController.navigate(NavigationGraph.SETTINGS_SCREEN.route)
+                            }
                         }
                     }
                     onClose()

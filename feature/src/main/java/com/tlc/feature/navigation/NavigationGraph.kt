@@ -13,6 +13,8 @@ enum class NavigationGraph(val route: String) {
     ADMIN_SCREEN("admin_screen"),
     DESIGN_SCREEN("design_screen/{placeData}"),
     CUSTOMER_SCREEN("customer_screen"),
+    SETTINGS_SCREEN("settings_screen"),
+    YOUR_PLACE_SCREEN("your_place_screen"),
     PLACE_DETAILS_SCREEN("place_details_screen/{placeData}"),
     CUSTOMER_TABLE_SELECTION_SCREEN("customer_table_selection_screen/{placeData}"),
     SAVE_RESERVATION_SCREEN("save_reservation_screen/{placeId}/{tableId}?date={date}"),
@@ -68,6 +70,8 @@ enum class NavigationGraph(val route: String) {
                 route == IS_LOGGED_IN.route -> false
                 route == ADMIN_SCREEN.route -> true
                 route == CUSTOMER_SCREEN.route -> true
+                route == SETTINGS_SCREEN.route -> true
+                route == YOUR_PLACE_SCREEN.route -> true
                 route.startsWith("design_screen/") -> true
                 route.startsWith("place_details_screen/") -> true
                 route.startsWith("customer_table_selection_screen/") -> true
@@ -84,6 +88,8 @@ enum class NavigationGraph(val route: String) {
             return when {
                 route == CUSTOMER_SCREEN.route -> true
                 route == ADMIN_SCREEN.route -> true
+                route == SETTINGS_SCREEN.route -> true
+                route == YOUR_PLACE_SCREEN.route -> true
                 route == LOGIN.route -> true
                 route == REGISTER.route -> true
                 route == FORGOT_PASSWORD.route -> true

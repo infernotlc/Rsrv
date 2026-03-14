@@ -1,5 +1,7 @@
 package com.tlc.feature.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -30,9 +32,12 @@ import com.tlc.feature.feature.profile.AdminReservationsScreen
 import com.tlc.feature.feature.reservation.SaveReservationScreen
 import com.tlc.feature.feature.profile.ProfileScreen
 import com.tlc.feature.feature.profile.CustomerReservationsScreen
+import com.tlc.feature.feature.settings.SettingsScreen
+import com.tlc.feature.feature.settings.YourPlaceScreen
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RsrvNavigation(
     navController: NavHostController,
@@ -77,6 +82,14 @@ fun RsrvNavigation(
         composable(NavigationGraph.CUSTOMER_SCREEN.route) {
             CustomerScreen(navController)
             onTitleChange("Customer Screen")
+        }
+        composable(NavigationGraph.SETTINGS_SCREEN.route) {
+            SettingsScreen(navController)
+            onTitleChange("Settings")
+        }
+        composable(NavigationGraph.YOUR_PLACE_SCREEN.route) {
+            YourPlaceScreen(navController)
+            onTitleChange("Your Place")
         }
         composable(
             route = NavigationGraph.PLACE_DETAILS_SCREEN.route,

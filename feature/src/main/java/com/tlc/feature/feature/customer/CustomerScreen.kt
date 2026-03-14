@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.util.Log
 import android.os.Build
 import androidx.annotation.RequiresApi
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,6 +33,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Timestamp
 import com.google.gson.Gson
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.tlc.domain.model.firebase.DesignItem
 import com.tlc.domain.model.firebase.Place
 import com.tlc.domain.model.firebase.Reservation
@@ -41,6 +45,7 @@ import com.tlc.feature.navigation.NavigationGraph
 import com.tlc.feature.feature.reservation.util.DatePickerWithDialog
 import com.tlc.feature.navigation.main_datastore.MainDataStore
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.tasks.await
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
@@ -63,6 +68,9 @@ fun CustomerScreen(
     val role by viewModel.role.collectAsState()
     val fullyBookedTables by viewModel.fullyBookedTables.collectAsState()
     val isTableStatusLoading by viewModel.tableStatusLoading.collectAsState()
+
+    var userCity by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
     
     var selectedPlaceId by remember { mutableStateOf<String?>(null) }
     var selectedPlace by remember { mutableStateOf<Place?>(null) }
@@ -80,6 +88,31 @@ fun CustomerScreen(
         selectedDate = currentDate
         // Update view model with login state
         viewModel.updateLoginState(isUserLoggedIn, userRole)
+    }
+
+    // Load current user's city for filtering places and redirect to Your Place if not set
+    LaunchedEffect(Unit) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            try {
+                val snapshot = FirebaseFirestore.getInstance()
+                    .collection("users")
+                    .document(currentUser.uid)
+                    .get()
+                    .await()
+                val city = snapshot.getString("city")
+                userCity = city
+
+                // If customer and no city is set, force them to Your Place screen
+                if ((userRole == "customer" || userRole.isEmpty()) && (city == null || city.isEmpty())) {
+                    navController.navigate(NavigationGraph.YOUR_PLACE_SCREEN.route)
+                }
+            } catch (_: Exception) {
+                userCity = null
+            }
+        } else {
+            userCity = null
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -421,11 +454,14 @@ fun CustomerScreen(
                             val places =
                                 (placesState.result as RootResult.Success<List<Place>>).data
                                     ?: emptyList()
+                            val filteredPlaces = userCity?.let { cityFilter ->
+                                places.filter { it.city == cityFilter }
+                            } ?: places
                             LazyColumn(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                items(places) { place ->
+                                items(filteredPlaces) { place ->
                                     EnhancedPlaceItem(
                                         place = place,
                                         onClick = {
